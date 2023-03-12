@@ -1,4 +1,24 @@
-@import './base.css';
+
+@import './base.scss';
+
+
+
+$primary: #02bd7e;
+$secondary: #244C57;
+//$success: ;
+$info: #1AC2F0;
+$warning: #FFB800;
+$danger: #C53B33;
+$light: #f8f8f8;
+$dark: #181818;
+
+$body-bg: $dark;
+$body-color: $primary;
+
+$code-color: #F01A5F;
+
+
+@import '~bootstrap/scss/bootstrap';
 
 #app {
   max-width: 1280px;
