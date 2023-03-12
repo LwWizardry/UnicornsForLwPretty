@@ -9,7 +9,7 @@
             style="--bs-bg-opacity: 0.75;">
             <div class="p-2 w-100">
                 <div class="d-flex flex-row justify-content-between">
-                    <h4 class=" ps-1 text-primary">Bin Ich MOD, gugst du!</h4>
+                    <h4 class=" ps-1 text-primary">I am MOD, you look!</h4>
                     <div class="text-primary fs-5 ms-1">0.91</div>
 
                 </div>
@@ -18,7 +18,7 @@
                     <p><i class="bi bi-download"></i> 16</p>
                     <p><i class="bi bi-hand-thumbs-up-fill"></i> 8</p>
                 </div>
-                <p class="card-text px-2">Hier könnte die beschreibung deiner Mod stehen! <br>Wieso tut sie das noch nicht ?!?!</p>
+                <p class="card-text px-2">Here could be the description of your mod! <br> Why does it not yet ?!?!</p>
             </div>
         </div>
         <div class="card-footer bg-dark d-flex flex-row flex-wrap justify-content-between pb-2">
