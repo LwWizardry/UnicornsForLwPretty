@@ -1,24 +1,33 @@
 
 @import './base.scss';
-
+@import '~/bootstrap/scss/functions';
+@import "~/bootstrap-icons/font/bootstrap-icons.css";
 
 
 $primary: #02bd7e;
-$secondary: #244C57;
-//$success: ;
+$secondary: #303030;
+$tertiary: #888888;
+$success: #0BBD1D;
 $info: #1AC2F0;
 $warning: #FFB800;
 $danger: #C53B33;
 $light: #f8f8f8;
-$dark: #181818;
+$dark: #222222;
 
 $body-bg: $dark;
-$body-color: $primary;
+$body-color: $light;
 
 $code-color: #F01A5F;
 
+.text-tertiary {
+	color: $tertiary;
+}
 
-@import '~bootstrap/scss/bootstrap';
+@import '~/bootstrap/scss/bootstrap';
+
+$theme-colors: (
+ "tertiary" : $tertiary,
+);
 
 #app {
 	max-width: 1280px;
@@ -51,4 +60,12 @@ a,
 		grid-template-columns: 1fr 1fr;
 		padding: 0 2rem;
 	}
+}
+
+.blur{
+	filter: blur(4px);
+}
+
+.bg-blur{
+	backdrop-filter: blur(10px);
 }
