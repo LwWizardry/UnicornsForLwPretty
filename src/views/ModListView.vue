@@ -17,11 +17,11 @@
 import {onMounted, reactive} from "vue";
 import axios from "axios";
 
-const state = reactive({mods: null})
+const state = reactive({mods: null});
 
 onMounted(() => {
 	//TBI: Currently this is running, whenever the "tab" is visited. Reduce this somehow.
-	const remote = import.meta.env.PROD ? 'https://api-lwmods.ecconia.com/mods' : 'http://api-lwmods.localhost/mods';
+	const remote = import.meta.env.VITE_BACKEND + '/mods';
 	console.log("Getting mods from backend: ", remote); //TODO: Remove this message eventually.
 	axios.get(remote)
 		.then((response) => {
