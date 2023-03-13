@@ -20,9 +20,10 @@ import axios from "axios";
 const state = reactive({mods: null})
 
 onMounted(() => {
-	console.log("Getting mods from backend...");
 	//TBI: Currently this is running, whenever the "tab" is visited. Reduce this somehow.
-	axios.get("http://api-lwmods.localhost/mods")
+	const remote = import.meta.env.PROD ? 'https://api-lwmods.ecconia.com/mods' : 'http://api-lwmods.localhost/mods';
+	console.log("Getting mods from backend: ", remote); //TODO: Remove this message eventually.
+	axios.get(remote)
 		.then((response) => {
 			state.mods = response.data;
 		})
