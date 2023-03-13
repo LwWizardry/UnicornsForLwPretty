@@ -13,11 +13,17 @@
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {onMounted, reactive} from "vue";
 import axios from "axios";
 
-const state = reactive({mods: null});
+interface ModListEntry {
+	name: string;
+}
+
+const state = reactive({
+	mods: null as ModListEntry[]|null
+});
 
 onMounted(() => {
 	//TBI: Currently this is running, whenever the "tab" is visited. Reduce this somehow.
@@ -25,6 +31,7 @@ onMounted(() => {
 	console.log("Getting mods from backend: ", remote); //TODO: Remove this message eventually.
 	axios.get(remote)
 		.then((response) => {
+			//TODO: Validate response!
 			state.mods = response.data;
 		})
 		.catch((error) => {
