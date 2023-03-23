@@ -73,7 +73,7 @@
 
 <script setup lang="ts">
 import { reactive } from "vue";
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, type AxiosRequestConfig } from "axios";
 
 enum LoginState {
 	WaitingForPrivacy,
@@ -155,7 +155,7 @@ async function createdComment() {
 		return;
 	}
 	
-	const response = await performAPIRequest('/auth/login/created?session=' + encodeURIComponent(state.serverChallenge.session));
+	const response = await performAPIRequestWithSession('/auth/login/created', state.serverChallenge.session);
 	if(!response) {
 		return; //Failed!
 	}
@@ -178,7 +178,7 @@ async function deletedComment() {
 		return;
 	}
 	
-	const response = await performAPIRequest('/auth/login/deleted?session=' + encodeURIComponent(state.serverChallenge.session));
+	const response = await performAPIRequestWithSession('/auth/login/deleted', state.serverChallenge.session);
 	if(!response) {
 		return; //Failed!
 	}
@@ -191,11 +191,19 @@ async function deletedComment() {
 
 //### API-ACCESS #####
 
-async function performAPIRequest(path: string) {
+async function performAPIRequestWithSession(path: string, session: string) {
+	return await performAPIRequest(path, {
+		headers: {
+			Authorization: 'Bearer ' + session,
+		}
+	})
+}
+
+async function performAPIRequest(path: string, config?: AxiosRequestConfig) {
 	const remote = import.meta.env.VITE_BACKEND + path;
 	//console.log("Performing API request to: ", remote);
 	try {
-		const response = await axios.get(remote);
+		const response = await axios.get(remote, config);
 		if(!response.data) {
 			//How is there no data?
 			console.error("API request yielded " + response.status + " but no content was delivered...");
