@@ -68,10 +68,17 @@
 </template>
 
 <script setup lang="ts">
-import axios, { AxiosError, type AxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/stores/auth";
-import { isTypeLoggedInUser, LoginState } from "@/types/auth";
+import {
+	isTypeLoggedInUser,
+	isTypeMessagesToDelete, isTypeMessageToDelete,
+	isTypeServerChallenge,
+	LoginState
+} from "@/types/auth";
 import { storeToRefs } from "pinia";
+import { performAPIRequest, performAPIRequestWithSession } from "@/code/apiRequests";
+import { FailedResponse, isTypeFailedResponse, isTypeSuccessfulResponse } from "@/types/api";
+import { isArrayOfType } from "@/helper/jsonValidator";
 
 //### STATE #####
 
@@ -88,35 +95,25 @@ function copyToClipboard() {
 	navigator.clipboard.writeText(loginInformation.value.serverChallenge.challenge);
 }
 
-function updateCommentsToDelete(commentsToDelete: any) {
-	if(!commentsToDelete || !(commentsToDelete instanceof Array)) {
-		return false;
-	}
-	for (const comment of commentsToDelete) {
-		if(typeof(comment.id) != "string" || typeof(comment.content) != "string") {
-			return false;
-		}
-	}
-	
-	loginInformation.value.messagesToDelete = commentsToDelete;
-	return true;
-}
-
 //### STATE-SWITCHER #####
 
 async function acceptPrivacyPolicy() {
-	if(!loginInformation.value.acceptPP) {
+	if (!loginInformation.value.acceptPP) {
 		//This should not be possible. Nevertheless, stop here!
 		return;
 	}
 	
 	//Load the challenge session from the server:
-	const response = await performAPIRequest('/auth/login/new?privacy-policy=accept');
-	if(!response) {
+	const apiResponse = await performAPIRequest('/auth/login/new?privacy-policy=accept');
+	if(!isTypeSuccessfulResponse(apiResponse)) {
+		if (isTypeFailedResponse(apiResponse)) {
+			handleFailureResponse(apiResponse);
+		}
 		return; //Failed!
 	}
+	const response = apiResponse.data;
 	//We got a data block!
-	if(!response.challenge || !response.session || typeof(response.challenge) != "string" || typeof(response.session) != "string") {
+	if(!isTypeServerChallenge(response)) {
 		console.error("API returned nonsense:", response);
 		//TODO: notify user of issue!
 	}
@@ -131,20 +128,22 @@ async function createdComment() {
 		return;
 	}
 	
-	const response = await performAPIRequestWithSession('/auth/login/created', loginInformation.value.serverChallenge.session);
-	if(!response) {
+	const apiResponse = await performAPIRequestWithSession('/auth/login/created', loginInformation.value.serverChallenge.session);
+	if(!isTypeSuccessfulResponse(apiResponse)) {
+		if (isTypeFailedResponse(apiResponse)) {
+			handleFailureResponse(apiResponse);
+		}
 		return; //Failed!
 	}
+	const response = apiResponse.data;
 	//We got a data block!
 	
-	if(typeof(response.author) != "string") {
+	if(!isTypeMessagesToDelete(response)) {
 		console.error("Weird API data response:", response);
 		return;
 	}
-	if(!updateCommentsToDelete(response.messagesToDelete)) {
-		console.error("Weird API data response:", response);
-		return;
-	}
+	
+	loginInformation.value.messagesToDelete = response.messagesToDelete;
 	loginInformation.value.loginState = LoginState.WaitingForDeletion;
 }
 
@@ -154,10 +153,14 @@ async function deletedComment() {
 		return;
 	}
 	
-	const response = await performAPIRequestWithSession('/auth/login/deleted', loginInformation.value.serverChallenge.session);
-	if(!response) {
+	const apiResponse = await performAPIRequestWithSession('/auth/login/deleted', loginInformation.value.serverChallenge.session);
+	if(!isTypeSuccessfulResponse(apiResponse)) {
+		if (isTypeFailedResponse(apiResponse)) {
+			handleFailureResponse(apiResponse);
+		}
 		return; //Failed!
 	}
+	const response = apiResponse.data;
 	//We got a data block!
 	
 	if(!isTypeLoggedInUser(response)) {
@@ -171,142 +174,34 @@ async function deletedComment() {
 
 //### API-ACCESS #####
 
-async function performAPIRequestWithSession(path: string, session: string) {
-	return await performAPIRequest(path, {
-		headers: {
-			Authorization: 'Bearer ' + session,
-		}
-	})
-}
-
-async function performAPIRequest(path: string, config?: AxiosRequestConfig) {
-	const remote = import.meta.env.VITE_BACKEND + path;
-	//console.log("Performing API request to: ", remote);
-	try {
-		const response = await axios.get(remote, config);
-		if(!response.data) {
-			//How is there no data?
-			console.error("API request yielded " + response.status + " but no content was delivered...");
-			//TODO: Notify user of error...
-			return undefined;
-		}
-		//Got a 200 response with content.
-		const data = response.data?.data;
-		if(!data) {
-			//But the expected 'data' block from the API is missing!
-			//Check for error/failure:
-			debugRequestContent(response.data);
-			return undefined;
-		}
-		//Got data block, forward it:
-		return data;
-	} catch (e) {
-		//Something went wrong!
-		if(axios.isAxiosError(e)) {
-			debugAxiosError(e as AxiosError);
-		} else {
-			console.error("Exception was thrown while performing API request.", e);
-			//TODO: Notify user of error...
-		}
+function handleFailureResponse(response: FailedResponse): void {
+	//TODO: Print message somewhere else than console!
+	//Handle actions if any:
+	if(response.actions === null) {
+		return; //Done here, no actions.
 	}
-	return undefined;
-}
-
-function debugAxiosError(error: AxiosError) {
-	if(error.response?.data) {
-		//We got a response from the server. Hence, process that instead:
-		debugRequestContent(error.response.data);
-		return;
-	}
-	//At this point, the server never sent response content that we could process.
-	// Print generic errors:
-	
-	if(error.code == AxiosError.ERR_NETWORK) {
-		console.error("Network error while talking to API. Check console for details!");
-		console.error("Full error:", error);
-		return;
-	}
-	
-	if(!error.response) {
-		//How is this possible? How would axios take care of this?
-		// Just dump the whole thing...
-		console.log("Received AxiosError without response from the server:", error);
-		return;
-	}
-	
-	const response = error.response;
-	if(response.status == 404) {
-		console.error("Server claims that '" + error.request.responseURL + "' does not exist and returned a 404 error.");
-	} else if(response.status == 405) {
-		console.error("Server claims that a bad request type has been used on '" + error.request.responseURL + "'.");
-	} else {
-		console.error("Axios error{ Code: '", error.code, "' Message: '", error.message, "'}");
-		console.error("Full error:", error);
-	}
-}
-
-function debugRequestContent(content: any) {
-	if(content.error) {
-		const error = content.error;
-		if(error.type == "bad-request" && typeof(error.message) == "string") {
-			//TODO: Notify user!
-			console.error("API returned bad request with message:", error.message);
-		} else if(error.type == "internal-descriptive" && typeof(error.message) == "string") {
-			//TODO: Notify user!
-			console.error("API had internal error with message:", error.message);
-		} else if(error.type == "internal"
-			&& typeof(error.class) == "string"
-			&& typeof(error.code) != "undefined"
-			&& typeof(error.message) == "string"
-			&& typeof(error["trace"]) == "string"
-		) {
-			//TODO: Notify user!
-			console.error("Backend threw unexpected exception while performing API request:\n",
-				error.class, "(", error.code, "):", error.message, "\n\n",
-				error.trace
-			);
-		} else {
-			//TODO: Notify user!
-			console.error("API returned unknown error:", content.error);
-		}
-	} else if(content.failure) {
-		const failure = content.failure;
-		if(failure.actions)
-		{
-			for (const entry of failure.actions) {
-				const action = entry.action;
-				if(!action) {
-					continue;
-				}
-				if(action == "new-session") {
-					//Reset state back to privacy policy:
-					loginInformation.value.loginState = LoginState.WaitingForPrivacy;
-					loginInformation.value.serverChallenge = null;
-					loginInformation.value.messagesToDelete = null;
-					//Pretend the user acknowledged that.
-					acceptPrivacyPolicy();
-				} else if(action == "update-comments") {
-					if(!updateCommentsToDelete(entry.comments)) {
-						console.error("Server sent malformed/invalid comments to delete update: ", entry.comments);
-					}
-				} else {
-					//TODO: Notify user!
-					console.error("UNKNOWN ACTION:", action);
-				}
+	for(const action of response.actions) {
+		const name = action.action;
+		if(name === "new-session") {
+			//Reset state back to privacy policy:
+			loginInformation.value.loginState = LoginState.WaitingForPrivacy;
+			loginInformation.value.serverChallenge = null;
+			loginInformation.value.messagesToDelete = null;
+			//Pretend the user acknowledged that.
+			acceptPrivacyPolicy();
+		} else if(name === "update-comments") {
+			const genericAction = action as any; //TBI: Find a better generic way to receive the right type...
+			if(!isArrayOfType(genericAction.comments, isTypeMessageToDelete)) {
+				console.error("Server sent malformed/invalid comments to delete update: ", genericAction.comments);
 			}
-		}
-		if(failure["user-error"] && typeof(failure["user-error"]) == "string") {
-			//TODO: Notify user!
-			console.error("API returned user error:", failure['user-error']);
+			loginInformation.value.messagesToDelete = genericAction.comments;
 		} else {
 			//TODO: Notify user!
-			console.error("API returned unknown failure:", content.failure);
+			console.error("UNKNOWN ACTION:", action);
 		}
-	} else {
-		//Huh?
-		console.error("API returned weird content:", content);
 	}
 }
+
 </script>
 
 <style scoped>
