@@ -7,7 +7,7 @@
 	<ol>
 		<li>
 			Accept the privacy policy. Press 'Continue'.
-			<span class="check" v-if="state.loginState > LoginState.WaitingForPrivacy">✓</span>
+			<span class="check" v-if="loginInformation.loginState > LoginState.WaitingForPrivacy">✓</span>
 		</li>
 		<li>
 			<ul>
@@ -21,38 +21,38 @@
 				<li>
 					<p>
 						Create a comment with a '<i>challenge message</i>' on that thread. Press 'Continue'.
-						<span class="check" v-if="state.loginState > LoginState.WaitingForComment">✓</span>
+						<span class="check" v-if="loginInformation.loginState > LoginState.WaitingForComment">✓</span>
 					</p>
 				</li>
 			</ul>
 		</li>
 		<li>
 			Delete the comment on that thread which you created just now. Press 'Continue' to finish the log in.
-			<span class="check" v-if="state.loginState > LoginState.WaitingForDeletion">✓</span>
+			<span class="check" v-if="loginInformation.loginState > LoginState.WaitingForDeletion">✓</span>
 		</li>
 	</ol>
 	
 	<br />
 	<p>Instruction:</p>
 	<div class="instruction-box">
-		<div v-if="state.loginState === LoginState.WaitingForPrivacy">
-			<p><input type="checkbox" v-model="state.acceptPP"> I accept the <a href="/privacy-policy" target="_blank">Privacy Policy</a> (required)</p>
+		<div v-if="loginInformation.loginState === LoginState.WaitingForPrivacy">
+			<p><input type="checkbox" v-model="loginInformation.acceptPP"> I accept the <a href="/privacy-policy" target="_blank">Privacy Policy</a> (required)</p>
 			<br />
-			<button :disabled="!state.acceptPP" @click="acceptPrivacyPolicy">Continue</button>
+			<button :disabled="!loginInformation.acceptPP" @click="acceptPrivacyPolicy">Continue</button>
 		</div>
-		<div v-else-if="state.loginState === LoginState.WaitingForComment">
+		<div v-else-if="loginInformation.loginState === LoginState.WaitingForComment">
 			<p>Open Logic World Forum Thread <a href="https://logicworld.net/view/pst-3c6860ea" target="_blank">Mod Portal Registration</a> and create a comment with following content:</p>
-			<p><span class="challenge-text">{{ state.serverChallenge?.challenge }}</span> <button @click="copyToClipboard">Copy!</button></p>
+			<p><span class="challenge-text">{{ loginInformation.serverChallenge?.challenge }}</span> <button @click="copyToClipboard">Copy!</button></p>
 			<br />
 			<p>For your own safety: <b>Do not edit the comment containing your challenge</b> (reload this page if you messed up).</p>
 			<br />
 			<button @click="createdComment">Continue</button>
 		</div>
-		<div v-else-if="state.loginState === LoginState.WaitingForDeletion">
+		<div v-else-if="loginInformation.loginState === LoginState.WaitingForDeletion">
 			<div>
 				<p>Comments you have to delete:</p>
 				<ul>
-					<li v-for="message in state.messagesToDelete">
+					<li v-for="message in loginInformation.messagesToDelete">
 						<a :href="'https://logicworld.net/view/pst-3c6860ea#' + message.id" target="_blank">{{message.content}}</a>
 					</li>
 				</ul>
@@ -60,59 +60,32 @@
 			<br />
 			<button @click="deletedComment">Continue</button>
 		</div>
-		<div v-else-if="state.loginState === LoginState.LoggedIn">
+		<div v-else-if="loginInformation.loginState === LoginState.LoggedIn">
 				<p>You are logged in!</p>
 		</div>
 	</div>
 	<br />
-	
-	<div v-if="state.lastError">
-		<p>Internal API error:</p>
-	</div>
 </template>
 
 <script setup lang="ts">
-import { reactive } from "vue";
 import axios, { AxiosError, type AxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/stores/auth";
-import { isTypeLoggedInUser } from "@/types/auth";
-
-enum LoginState {
-	WaitingForPrivacy,
-	WaitingForComment,
-	WaitingForDeletion,
-	LoggedIn,
-}
-
-interface ServerChallenge {
-	challenge: string,
-	session: string,
-}
-
-interface MessageToDelete {
-	id: string,
-	content: string,
-}
+import { isTypeLoggedInUser, LoginState } from "@/types/auth";
+import { storeToRefs } from "pinia";
 
 //### STATE #####
 
 const authStore = useAuthStore();
-const state = reactive({
-	acceptPP: false,
-	loginState: LoginState.WaitingForPrivacy,
-	serverChallenge: null as ServerChallenge|null,
-	messagesToDelete: null as MessageToDelete[]|null,
-	lastError: null as string|null,
-});
+const { loginInformation } = storeToRefs(authStore);
 
 //### HELPERS #####
 
 function copyToClipboard() {
-	if(!state.serverChallenge) {
+	if(!loginInformation.value.serverChallenge) {
 		//Whoops!
 		return;
 	}
-	navigator.clipboard.writeText(state.serverChallenge.challenge);
+	navigator.clipboard.writeText(loginInformation.value.serverChallenge.challenge);
 }
 
 function updateCommentsToDelete(commentsToDelete: any) {
@@ -125,14 +98,14 @@ function updateCommentsToDelete(commentsToDelete: any) {
 		}
 	}
 	
-	state.messagesToDelete = commentsToDelete;
+	loginInformation.value.messagesToDelete = commentsToDelete;
 	return true;
 }
 
 //### STATE-SWITCHER #####
 
 async function acceptPrivacyPolicy() {
-	if(!state.acceptPP) {
+	if(!loginInformation.value.acceptPP) {
 		//This should not be possible. Nevertheless, stop here!
 		return;
 	}
@@ -148,17 +121,17 @@ async function acceptPrivacyPolicy() {
 		//TODO: notify user of issue!
 	}
 	
-	state.serverChallenge = response;
-	state.loginState = LoginState.WaitingForComment;
+	loginInformation.value.serverChallenge = response;
+	loginInformation.value.loginState = LoginState.WaitingForComment;
 }
 
 async function createdComment() {
-	if(!state.acceptPP || state.loginState != LoginState.WaitingForComment || !state.serverChallenge) {
+	if(!loginInformation.value.acceptPP || loginInformation.value.loginState != LoginState.WaitingForComment || !loginInformation.value.serverChallenge) {
 		//Something went terribly wrong, it should not be possible to even trigger this.
 		return;
 	}
 	
-	const response = await performAPIRequestWithSession('/auth/login/created', state.serverChallenge.session);
+	const response = await performAPIRequestWithSession('/auth/login/created', loginInformation.value.serverChallenge.session);
 	if(!response) {
 		return; //Failed!
 	}
@@ -172,16 +145,16 @@ async function createdComment() {
 		console.error("Weird API data response:", response);
 		return;
 	}
-	state.loginState = LoginState.WaitingForDeletion;
+	loginInformation.value.loginState = LoginState.WaitingForDeletion;
 }
 
 async function deletedComment() {
-	if(!state.acceptPP || state.loginState != LoginState.WaitingForDeletion || !state.serverChallenge) {
+	if(!loginInformation.value.acceptPP || loginInformation.value.loginState != LoginState.WaitingForDeletion || !loginInformation.value.serverChallenge) {
 		//Something went terribly wrong, it should not be possible to even trigger this.
 		return;
 	}
 	
-	const response = await performAPIRequestWithSession('/auth/login/deleted', state.serverChallenge.session);
+	const response = await performAPIRequestWithSession('/auth/login/deleted', loginInformation.value.serverChallenge.session);
 	if(!response) {
 		return; //Failed!
 	}
@@ -193,7 +166,7 @@ async function deletedComment() {
 	}
 	
 	authStore.currentUser = response;
-	state.loginState = LoginState.LoggedIn;
+	loginInformation.value.loginState = LoginState.LoggedIn;
 }
 
 //### API-ACCESS #####
@@ -307,9 +280,9 @@ function debugRequestContent(content: any) {
 				}
 				if(action == "new-session") {
 					//Reset state back to privacy policy:
-					state.loginState = LoginState.WaitingForPrivacy;
-					state.serverChallenge = null;
-					state.messagesToDelete = null;
+					loginInformation.value.loginState = LoginState.WaitingForPrivacy;
+					loginInformation.value.serverChallenge = null;
+					loginInformation.value.messagesToDelete = null;
 					//Pretend the user acknowledged that.
 					acceptPrivacyPolicy();
 				} else if(action == "update-comments") {
