@@ -34,7 +34,7 @@ export const useAuthStore = defineStore("auth", {
 			serverChallenge: null,
 			messagesToDelete: null,
 		} as LoginInformation, //TBI: Is there a better way to set the type?
-		currentUser: loadUserDataFromJSON(),
+		currentUser: null as null | LoggedInUser,
 	}),
 	getters: {
 		isLoggedIn: (state): boolean => {
@@ -114,4 +114,8 @@ export function setupAuthStore(): void {
 			console.info("Logged in as " + newValue.username);
 		}
 	});
+	
+	//Initialize the user value - while also triggering the side effects.
+	// Side effect is that the login information is also modified.
+	store.currentUser = loadUserDataFromJSON();
 }
