@@ -74,6 +74,8 @@
 <script setup lang="ts">
 import { reactive } from "vue";
 import axios, { AxiosError, type AxiosRequestConfig } from "axios";
+import { useAuthStore } from "@/stores/auth";
+import { isTypeLoggedInUser } from "@/types/auth";
 
 enum LoginState {
 	WaitingForPrivacy,
@@ -94,6 +96,7 @@ interface MessageToDelete {
 
 //### STATE #####
 
+const authStore = useAuthStore();
 const state = reactive({
 	acceptPP: false,
 	loginState: LoginState.WaitingForPrivacy,
@@ -184,8 +187,12 @@ async function deletedComment() {
 	}
 	//We got a data block!
 	
-	//TODO: Parse login data JWT etc as soon as the backend has code for that!
+	if(!isTypeLoggedInUser(response)) {
+		console.error("Weird API data response:", response);
+		return;
+	}
 	
+	authStore.currentUser = response;
 	state.loginState = LoginState.LoggedIn;
 }
 

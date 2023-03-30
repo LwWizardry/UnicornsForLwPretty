@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
+import { useAuthStore } from "@/stores/auth";
+
+const authStore = useAuthStore();
 </script>
 
 <template>
@@ -8,11 +11,13 @@ import HelloWorld from './components/HelloWorld.vue'
 		<div class="wrapper">
 			<HelloWorld msg="Logic World Community Mod Portal" />
 			
+			<span v-if="authStore.currentUser">Hi {{ authStore.currentUser.username }}</span>
+			
 			<nav>
 				<RouterLink to="/">Home</RouterLink>
 				<RouterLink to="/mods">Mods</RouterLink>
 				<RouterLink to="/about">About</RouterLink>
-				<RouterLink to="/login">Login</RouterLink>
+				<RouterLink v-if="!authStore.isLoggedIn" to="/login">Login</RouterLink>
 			</nav>
 		</div>
 	</header>
