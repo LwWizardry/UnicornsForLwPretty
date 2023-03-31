@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
-import type { LoggedInUser } from "@/types/auth";
-import { isTypeLoggedInUser } from "@/types/auth";
+import type { LoggedInUser, LoginInformation } from "@/types/auth";
+import { isTypeLoggedInUser, LoginState } from "@/types/auth";
 import { watch } from "vue";
 
 function loadUserDataFromJSON(): null | LoggedInUser {
@@ -28,7 +28,13 @@ function loadUserDataFromJSON(): null | LoggedInUser {
 export const useAuthStore = defineStore("auth", {
 	//As per recommendation of Pinia Doc: Start with Options API. Composition would work too - to be debated later.
 	state: () => ({
-		currentUser: loadUserDataFromJSON(),
+		loginInformation: {
+			loginState: LoginState.WaitingForPrivacy,
+			acceptPP: false,
+			serverChallenge: null,
+			messagesToDelete: null,
+		} as LoginInformation, //TBI: Is there a better way to set the type?
+		currentUser: null as null | LoggedInUser,
 	}),
 	getters: {
 		isLoggedIn: (state): boolean => {
@@ -41,10 +47,18 @@ export const useAuthStore = defineStore("auth", {
 			return "https://assets.logicworld.net/upload/" + state.currentUser.picture;
 		},
 	},
+	actions: {
+		resetLoginState(): void {
+			this.loginInformation.acceptPP = false;
+			this.loginInformation.serverChallenge = null;
+			this.loginInformation.messagesToDelete = null;
+			this.loginInformation.loginState = this.currentUser === null ? LoginState.WaitingForPrivacy : LoginState.LoggedIn;
+		},
+	}
 });
 
 export function setupAuthStore(): void {
-	const store = useAuthStore();
+	const store = useAuthStore(window.__pinia);
 	
 	//Listen to local storage changes, if the current user changed, update this in this instance too.
 	addEventListener('storage', (event: StorageEvent): void => {
@@ -86,6 +100,7 @@ export function setupAuthStore(): void {
 			//Logout!
 			//Delete from local storage:
 			window.localStorage.removeItem("user");
+			store.resetLoginState();
 			console.info("Logged out.");
 		} else if (newValue !== null) {
 			if (oldValue !== null) {
@@ -95,7 +110,12 @@ export function setupAuthStore(): void {
 			//Login!
 			//Save to local storage:
 			window.localStorage.setItem("user", JSON.stringify(newValue));
+			store.resetLoginState();
 			console.info("Logged in as " + newValue.username);
 		}
 	});
+	
+	//Initialize the user value - while also triggering the side effects.
+	// Side effect is that the login information is also modified.
+	store.currentUser = loadUserDataFromJSON();
 }
