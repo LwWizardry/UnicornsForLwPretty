@@ -11,13 +11,12 @@ const authStore = useAuthStore();
 		<div class="wrapper">
 			<HelloWorld msg="Logic World Community Mod Portal" />
 			
-			<span v-if="authStore.currentUser">Hi {{ authStore.currentUser.username }}</span>
-			
 			<nav>
 				<RouterLink to="/">Home</RouterLink>
 				<RouterLink to="/mods">Mods</RouterLink>
 				<RouterLink to="/about">About</RouterLink>
 				<RouterLink v-if="!authStore.isLoggedIn" to="/login">Login</RouterLink>
+				<a v-if="authStore.isLoggedIn" href="" onclick="return false" @click="authStore.currentUser = null">Logout ({{ authStore.currentUser.username }})</a>
 			</nav>
 		</div>
 	</header>
