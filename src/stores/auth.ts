@@ -58,7 +58,7 @@ export const useAuthStore = defineStore("auth", {
 });
 
 export function setupAuthStore(): void {
-	const store = useAuthStore();
+	const store = useAuthStore(window.__pinia);
 	
 	//Listen to local storage changes, if the current user changed, update this in this instance too.
 	addEventListener('storage', (event: StorageEvent): void => {
