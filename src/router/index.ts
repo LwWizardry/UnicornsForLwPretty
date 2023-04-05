@@ -29,6 +29,22 @@ const router = createRouter({
 			name: 'login',
 			component: LoginView,
 		},
+		//Legal routes:
+		{
+			path: '/terms',
+			name: 'terms of service',
+			component: () => import('../views/TermsView.vue'),
+		},
+		{
+			path: '/privacy',
+			name: 'privacy policy',
+			component: () => import('../views/PrivacyView.vue'),
+		},
+		{
+			path: '/imprint',
+			name: 'imprint',
+			component: () => import('../views/ImprintView.vue'),
+		},
 	]
 })
 
