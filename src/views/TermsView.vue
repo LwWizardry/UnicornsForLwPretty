@@ -10,7 +10,7 @@
 
 <style scoped>
 /* Temporary fix, until frontend style is reworked: */
-:global(strong) {
+::v-deep(strong) {
 	font-weight: bold;
 }
 </style>

@@ -9,7 +9,7 @@ const imprintHTML = content;
 </script>
 
 <style scoped>
-:global(p) {
+::v-deep(p) {
 	border: #aaa 1px solid;
 	padding: 3px;
 }
