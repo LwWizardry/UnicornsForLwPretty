@@ -29,8 +29,9 @@ export const useAuthStore = defineStore("auth", {
 	//As per recommendation of Pinia Doc: Start with Options API. Composition would work too - to be debated later.
 	state: () => ({
 		loginInformation: {
-			loginState: LoginState.WaitingForPrivacy,
+			loginState: LoginState.WaitingForTermsAndPrivacy,
 			acceptPP: false,
+			acceptTOS: false,
 			serverChallenge: null,
 			messagesToDelete: null,
 		} as LoginInformation, //TBI: Is there a better way to set the type?
@@ -50,9 +51,10 @@ export const useAuthStore = defineStore("auth", {
 	actions: {
 		resetLoginState(): void {
 			this.loginInformation.acceptPP = false;
+			this.loginInformation.acceptTOS = false;
 			this.loginInformation.serverChallenge = null;
 			this.loginInformation.messagesToDelete = null;
-			this.loginInformation.loginState = this.currentUser === null ? LoginState.WaitingForPrivacy : LoginState.LoggedIn;
+			this.loginInformation.loginState = this.currentUser === null ? LoginState.WaitingForTermsAndPrivacy : LoginState.LoggedIn;
 		},
 	}
 });

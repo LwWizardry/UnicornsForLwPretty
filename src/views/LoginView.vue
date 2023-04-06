@@ -7,7 +7,7 @@
 	<ol>
 		<li>
 			Accept the privacy policy. Press 'Continue'.
-			<span class="check" v-if="loginInformation.loginState > LoginState.WaitingForPrivacy">✓</span>
+			<span class="check" v-if="loginInformation.loginState > LoginState.WaitingForTermsAndPrivacy">✓</span>
 		</li>
 		<li>
 			<ul>
@@ -35,10 +35,11 @@
 	<br />
 	<p>Instruction:</p>
 	<div class="instruction-box">
-		<div v-if="loginInformation.loginState === LoginState.WaitingForPrivacy">
-			<p><input type="checkbox" v-model="loginInformation.acceptPP"> I accept the <a href="/privacy-policy" target="_blank">Privacy Policy</a> (required)</p>
+		<div v-if="loginInformation.loginState === LoginState.WaitingForTermsAndPrivacy">
+			<p><input type="checkbox" v-model="loginInformation.acceptTOS"> I accept the <a href="/terms" target="_blank">Terms of Service</a> (required)</p>
+			<p><input type="checkbox" v-model="loginInformation.acceptPP"> I accept the <a href="/privacy" target="_blank">Privacy Policy</a> (required)</p>
 			<br />
-			<button :disabled="!loginInformation.acceptPP" @click="acceptPrivacyPolicy">Continue</button>
+			<button :disabled="!loginInformation.acceptPP || !loginInformation.acceptTOS" @click="acceptTermsAndPrivacy">Continue</button>
 		</div>
 		<div v-else-if="loginInformation.loginState === LoginState.WaitingForComment">
 			<p>Open Logic World Forum Thread <a href="https://logicworld.net/view/pst-3c6860ea" target="_blank">Mod Portal Registration</a> and create a comment with following content:</p>
@@ -71,7 +72,7 @@
 import { useAuthStore } from "@/stores/auth";
 import { LoginState } from "@/types/auth";
 import { storeToRefs } from "pinia";
-import { acceptPrivacyPolicy, createdComment, deletedComment } from "@/code/login";
+import { acceptTermsAndPrivacy, createdComment, deletedComment } from "@/code/login";
 
 //### STATE #####
 

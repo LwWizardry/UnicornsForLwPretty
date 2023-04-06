@@ -11,17 +11,17 @@ import { isArrayOfType } from "@/helper/jsonValidator";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 
-export async function acceptPrivacyPolicy() {
+export async function acceptTermsAndPrivacy() {
 	const authStore = useAuthStore(window.__pinia);
 	const { loginInformation } = storeToRefs(authStore);
 	
-	if (!loginInformation.value.acceptPP) {
+	if (!loginInformation.value.acceptPP || !loginInformation.value.acceptTOS) {
 		//This should not be possible. Nevertheless, stop here!
 		return;
 	}
 	
 	//Load the challenge session from the server:
-	const apiResponse = await performAPIRequest('/auth/login/new?privacy-policy=accept');
+	const apiResponse = await performAPIRequest('/auth/login/new?privacy-policy=accept&terms-of-service=accept');
 	if(!isTypeSuccessfulResponse(apiResponse)) {
 		if (isTypeFailedResponse(apiResponse)) {
 			handleFailureResponse(apiResponse);
@@ -108,11 +108,11 @@ function handleFailureResponse(response: FailedResponse): void {
 		const name = action.action;
 		if(name === "new-session") {
 			//Reset state back to privacy policy:
-			loginInformation.value.loginState = LoginState.WaitingForPrivacy;
+			loginInformation.value.loginState = LoginState.WaitingForTermsAndPrivacy;
 			loginInformation.value.serverChallenge = null;
 			loginInformation.value.messagesToDelete = null;
 			//Pretend the user acknowledged that.
-			acceptPrivacyPolicy();
+			acceptTermsAndPrivacy();
 		} else if(name === "update-comments") {
 			const genericAction = action as any; //TBI: Find a better generic way to receive the right type...
 			if(!isArrayOfType(genericAction.comments, isTypeMessageToDelete)) {

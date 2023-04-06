@@ -49,7 +49,7 @@ export function isTypeMessageToDelete(value: any): value is MessageToDelete {
 }
 
 export enum LoginState {
-	WaitingForPrivacy,
+	WaitingForTermsAndPrivacy,
 	WaitingForComment,
 	WaitingForDeletion,
 	LoggedIn,
@@ -57,6 +57,7 @@ export enum LoginState {
 
 export interface LoginInformation {
 	acceptPP: boolean,
+	acceptTOS: boolean,
 	loginState: LoginState,
 	serverChallenge: ServerChallenge|null,
 	messagesToDelete: MessageToDelete[]|null,
