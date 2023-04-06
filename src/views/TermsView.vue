@@ -9,8 +9,5 @@
 </script>
 
 <style scoped>
-/* Temporary fix, until frontend style is reworked: */
-::v-deep(strong) {
-	font-weight: bold;
-}
+@import '/src/assets/markdown.css';
 </style>

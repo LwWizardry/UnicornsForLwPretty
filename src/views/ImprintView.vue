@@ -9,6 +9,7 @@ const imprintHTML = content;
 </script>
 
 <style scoped>
+@import '/src/assets/markdown.css';
 ::v-deep(p) {
 	border: #aaa 1px solid;
 	padding: 3px;
