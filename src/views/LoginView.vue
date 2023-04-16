@@ -39,15 +39,15 @@
 			<p><input type="checkbox" v-model="loginInformation.acceptTOS"> I accept the <a href="/terms" target="_blank">Terms of Service</a> (required)</p>
 			<p><input type="checkbox" v-model="loginInformation.acceptPP"> I accept the <a href="/privacy" target="_blank">Privacy Policy</a> (required)</p>
 			<br />
-			<button :disabled="!loginInformation.acceptPP || !loginInformation.acceptTOS" @click="acceptTermsAndPrivacy">Continue</button>
+			<button :disabled="!loginInformation.acceptPP || !loginInformation.acceptTOS" @click="acceptTermsAndPrivacy" class="custom-button-style">Continue</button>
 		</div>
 		<div v-else-if="loginInformation.loginState === LoginState.WaitingForComment">
 			<p>Open Logic World Forum Thread <a href="https://logicworld.net/view/pst-3c6860ea" target="_blank">Mod Portal Registration</a> and create a comment with following content:</p>
-			<p><span class="challenge-text">{{ loginInformation.serverChallenge?.challenge }}</span> <button @click="copyToClipboard">Copy!</button></p>
+			<p><span class="challenge-text">{{ loginInformation.serverChallenge?.challenge }}</span> <button @click="copyToClipboard" class="custom-button-style">Copy!</button></p>
 			<br />
 			<p>For your own safety: <b>Do not edit the comment containing your challenge</b> (reload this page if you messed up).</p>
 			<br />
-			<button @click="createdComment">Continue</button>
+			<button @click="createdComment" class="custom-button-style">Continue</button>
 		</div>
 		<div v-else-if="loginInformation.loginState === LoginState.WaitingForDeletion">
 			<div>
@@ -59,7 +59,7 @@
 				</ul>
 			</div>
 			<br />
-			<button @click="deletedComment">Continue</button>
+			<button @click="deletedComment" class="custom-button-style">Continue</button>
 		</div>
 		<div v-else-if="loginInformation.loginState === LoginState.LoggedIn">
 				<p>You are logged in!</p>
@@ -105,26 +105,5 @@ function copyToClipboard() {
 		font-family: monospace;
 		padding: 2px;
 		background-color: #333;
-	}
-	
-	/* Just anything to not let me be fully unwell */
-	button {
-		background-color: #333;
-		border: green solid 1px;
-		border-radius: 4px;
-		color: #aaa;
-		padding: 2px 8px 2px 8px;
-	}
-	button:hover {
-		background-color: #555;
-		color: #ccc;
-	}
-	button:active {
-		background-color: #444;
-		color: #bbb;
-	}
-	button:disabled {
-		background-color: #222;
-		border-color: #040;
 	}
 </style>

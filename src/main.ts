@@ -5,6 +5,7 @@ import router from './router'
 import { MarkdownController } from './code/markdownController';
 
 import './assets/main.css'
+import './assets/modPortalStyles.css'
 import { setupAuthStore } from "@/stores/auth";
 
 //Create Pinia and store it globally:
