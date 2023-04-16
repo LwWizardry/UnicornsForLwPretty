@@ -16,7 +16,7 @@ const authStore = useAuthStore();
 				<RouterLink to="/mods">Mods</RouterLink>
 				<RouterLink to="/about">About</RouterLink>
 				<RouterLink v-if="!authStore.isLoggedIn" to="/login">Login</RouterLink>
-				<a v-if="authStore.currentUser" href="" onclick="return false" @click="authStore.currentUser = null">Logout ({{ authStore.currentUser.username }})</a>
+				<RouterLink v-if="authStore.currentUser" to="/account">Account ({{ authStore.currentUser.username }})</RouterLink>
 				<RouterLink to="/terms">Terms of Service</RouterLink>
 				<RouterLink to="/privacy">Privacy Policy</RouterLink>
 				<RouterLink to="/imprint">Imprint</RouterLink>
