@@ -51,6 +51,18 @@ const router = createRouter({
 			name: 'imprint',
 			component: () => import('../views/ImprintView.vue'),
 		},
+		//Mod viewing routes:
+		{
+			path: '/mod/:mod',
+			name: 'mod-details',
+			component: () => import('../views/ModDetailView.vue'),
+		},
+		{
+			path: '/mod-direct/:mod',
+			redirect: to => {
+				return '/mod/' + to.params.mod;
+			},
+		},
 	]
 })
 
