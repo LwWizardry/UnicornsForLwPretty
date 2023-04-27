@@ -8,6 +8,43 @@ import {
 } from "@/types/api";
 import { isArrayOfType, isObject, isString } from "@/helper/jsonValidator";
 
+export async function performAPIPostWithSession(path: string, session: string, jsonData: any): Promise<APIResponse> {
+	const config = {
+		headers: {
+			Authorization: 'Bearer ' + session,
+		}
+	}
+	const remote = import.meta.env.VITE_BACKEND + path;
+	
+	try {
+		const response = await axios.post(remote, jsonData, config);
+		if (!response.data) {
+			//How is there no data?
+			console.error("API request yielded " + response.status + " but no content was delivered...");
+			//TODO: Notify user of error...
+			return new NotImplementedYetResponse();
+		}
+		//Got a 200 response with content.
+		const data = response.data?.data;
+		if (!data) {
+			//But the expected 'data' block from the API is missing!
+			//Check for error/failure:
+			return debugRequestContent(response.data);
+		}
+		//Got data block, forward it:
+		return new SuccessfulResponse(data);
+	} catch (e) {
+		//Something went wrong!
+		if (axios.isAxiosError(e)) {
+			return debugAxiosError(e as AxiosError);
+		} else {
+			console.error("Exception was thrown while performing API request.", e);
+			//TODO: Notify user of error...
+			return new NotImplementedYetResponse();
+		}
+	}
+}
+
 export async function performAPIRequestWithSession(path: string, session: string): Promise<APIResponse> {
 	return await performAPIRequest(path, {
 		headers: {
@@ -89,12 +126,12 @@ function debugRequestContent(content: any): APIResponse {
 		//The backend sent the 'error' type message, this means something went wrong which under normal conditions should not happen:
 		const error = content.error;
 		//Check the type of the error and parse/handle it appropriately:
-		if (error.type == "bad-request" && typeof (error.message) == "string") {
+		if (error.type == "bad-request" && isString(error.message)) {
 			//TODO: Notify user!
 			console.error("API returned bad request with message:", error.message);
 			//This error is unexpected and caused by the client. Missing header or similar. Should normally never happen.
 			return new NotImplementedYetResponse();
-		} else if (error.type == "internal-descriptive" && typeof (error.message) == "string") {
+		} else if (error.type == "internal-descriptive" && isString(error.message)) {
 			//TODO: Notify user!
 			console.error("API had internal error with message:", error.message);
 			//Something went wrong on the server, but it is expected to possibly happen:

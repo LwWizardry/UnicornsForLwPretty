@@ -51,6 +51,12 @@ const router = createRouter({
 			name: 'imprint',
 			component: () => import('../views/ImprintView.vue'),
 		},
+		//Mod management routes:
+		{
+			path: '/new-mod',
+			name: 'new-mod',
+			component: () => import('../views/NewModView.vue'),
+		},
 		//Mod viewing routes:
 		{
 			path: '/mod/:mod',
