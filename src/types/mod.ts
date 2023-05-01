@@ -1,4 +1,38 @@
-import { isArrayOfType, isString } from "@/helper/jsonValidator";
+import { isArrayOfType, isIntegerUnsigned, isString, isStringNullable } from "@/helper/jsonValidator";
+
+export interface LWUser {
+	id: string,
+	name: string,
+	picture: null|string,
+}
+
+export function isTypeLWUserOptional(value: any): value is null|LWUser {
+	if(value === null) {
+		return true;
+	}
+	return isIntegerUnsigned(value.id)
+		&& isString(value.name)
+		&& isStringNullable(value.picture)
+}
+
+export class MPUser {
+	identifier: string;
+	lw_data: null|LWUser;
+	
+	constructor(identifier: string, lw_data: LWUser | null) {
+		this.identifier = identifier;
+		this.lw_data = lw_data;
+	}
+	
+	getDisplayName() {
+		return this.lw_data !== null ? this.lw_data.name : this.identifier;
+	}
+}
+
+export function isTypeMPUser(value: any): value is MPUser {
+	return isString(value.identifier)
+		&& isTypeLWUserOptional(value.lw_data)
+}
 
 export interface ModSummary {
 	identifier: string,
@@ -6,18 +40,33 @@ export interface ModSummary {
 	title: string,
 	caption: string,
 	image: null,
-	//TODO: Add author or primary maintainer.
+	owner: MPUser,
 }
 
 export function isTypeModSummary(value: any): value is ModSummary {
 	return isString(value.title)
 		&& isString(value.caption)
 		&& isString(value.identifier)
+		&& isTypeMPUser(value.owner)
 	//TODO: Image, as soon as support for it.
+}
+
+export function parseTypeModSummary(value: ModSummary) {
+	let mutation = value;
+	mutation.owner = new MPUser(value.owner.identifier, value.owner.lw_data);
+	return mutation;
 }
 
 export function isTypeModSummaryArray(value: any): value is ModSummary[] {
 	return isArrayOfType(value, isTypeModSummary)
+}
+
+export function parseTypeModSummaryArray(value: ModSummary[]) {
+	let newArray = [];
+	for(const entry of value) {
+		newArray.push(parseTypeModSummary(entry));
+	}
+	return newArray;
 }
 
 export interface ModDetails {

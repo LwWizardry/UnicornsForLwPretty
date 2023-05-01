@@ -11,6 +11,7 @@
 				<RouterLink :to="'/mod/mod-' + mod.identifier">
 						<h3>{{ mod.title }}</h3>
 						<p>{{ mod.caption }}</p>
+						<p>By {{ mod.owner.getDisplayName() }}</p>
 				</RouterLink>
 			</li>
 		</ul>
@@ -22,7 +23,7 @@ import {onMounted, reactive} from "vue";
 import { useAuthStore } from "@/stores/auth";
 import type { ModSummary } from "@/types/mod";
 import { performAPIRequest } from "@/code/apiRequests";
-import { isTypeModSummaryArray } from "@/types/mod";
+import { isTypeModSummaryArray, parseTypeModSummaryArray } from "@/types/mod";
 import { isTypeSuccessfulResponse } from "@/types/api";
 
 const authStore = useAuthStore();
@@ -47,6 +48,6 @@ async function loadMods() {
 		console.log("Failed to query mods from backend, response was:", response)
 		return; //Failed!
 	}
-	state.mods = response;
+	state.mods = parseTypeModSummaryArray(response);
 }
 </script>
