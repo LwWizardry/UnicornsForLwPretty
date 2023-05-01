@@ -3,6 +3,8 @@ import HomeView from '../views/HomeView.vue'
 import ModListView from '../views/ModListView.vue'
 import LoginView from '../views/LoginView.vue'
 import AccountView from '../views/AccountView.vue'
+import AccountSettingsView from "@/views/AccountSettingsView.vue";
+import AccountModsView from "@/views/AccountModsView.vue";
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
@@ -34,6 +36,24 @@ const router = createRouter({
 			path: '/account',
 			name: 'account',
 			component: AccountView,
+			children: [
+				{
+					path: '',
+					name: 'account-settings',
+					components: {
+						default: AccountView,
+						AccountViewer: AccountSettingsView,
+					},
+				},
+				{
+					path: 'mods',
+					name: 'account-mods',
+					components: {
+						default: AccountView,
+						AccountViewer: AccountModsView,
+					},
+				},
+			]
 		},
 		//Legal routes:
 		{

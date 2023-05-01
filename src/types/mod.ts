@@ -69,6 +69,25 @@ export function parseTypeModSummaryArray(value: ModSummary[]) {
 	return newArray;
 }
 
+export interface ModSummaryAnonym {
+	identifier: string,
+	//TODO: Add optional custom URL identifier.
+	title: string,
+	caption: string,
+	image: null,
+}
+
+export function isTypeModSummaryAnonym(value: any): value is ModSummaryAnonym {
+	return isString(value.title)
+		&& isString(value.caption)
+		&& isString(value.identifier)
+	//TODO: Image, as soon as support for it.
+}
+
+export function isTypeModSummaryAnonymArray(value: any): value is ModSummaryAnonym[] {
+	return isArrayOfType(value, isTypeModSummaryAnonym)
+}
+
 export interface ModDetails {
 	identifier: string,
 	//TODO: Add optional custom URL identifier.
