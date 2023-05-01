@@ -3,6 +3,10 @@ export function isObject(data: any): boolean {
 	return data !== null && typeof (data) === "object";
 }
 
+export function isObjectNullable(data: any): boolean {
+	return typeof (data) === "object";
+}
+
 export function isString(data: any): boolean {
 	return typeof (data) === "string";
 }

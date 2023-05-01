@@ -70,14 +70,27 @@ export function parseTypeModSummaryArray(value: ModSummary[]) {
 }
 
 export interface ModDetails {
+	identifier: string,
+	//TODO: Add optional custom URL identifier.
 	title: string,
 	caption: string,
 	image: null,
+	owner: MPUser,
 	//TODO: All other relevant fields...
 }
 
-export function isTypeModDetails(value: any): value is ModDetails {
-	return isString(value.title)
-		&& isString(value.caption)
-	//TODO: Image, as soon as support for it.
+export function isTypeModDetailsOptional(value: any): value is ModDetails {
+	if(value === null) {
+		return true;
+	}
+	return isTypeModSummary(value)
+}
+
+export function parseTypeModDetailsOptional(value: ModDetails) {
+	if(value === null) {
+		return null;
+	}
+	let mutation = value;
+	mutation.owner = new MPUser(value.owner.identifier, value.owner.lw_data);
+	return mutation;
 }
