@@ -61,4 +61,5 @@ export interface LoginInformation {
 	loginState: LoginState,
 	serverChallenge: ServerChallenge|null,
 	messagesToDelete: MessageToDelete[]|null,
+	apiErrorMessage: null|string,
 }

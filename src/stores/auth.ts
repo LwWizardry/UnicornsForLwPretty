@@ -34,7 +34,8 @@ export const useAuthStore = defineStore("auth", {
 			acceptTOS: false,
 			serverChallenge: null,
 			messagesToDelete: null,
-		} as LoginInformation, //TBI: Is there a better way to set the type?
+			apiErrorMessage: null,
+		} as LoginInformation,
 		currentUser: null as null | LoggedInUser,
 	}),
 	getters: {
@@ -54,6 +55,7 @@ export const useAuthStore = defineStore("auth", {
 			this.loginInformation.acceptTOS = false;
 			this.loginInformation.serverChallenge = null;
 			this.loginInformation.messagesToDelete = null;
+			this.loginInformation.apiErrorMessage = null;
 			this.loginInformation.loginState = this.currentUser === null ? LoginState.WaitingForTermsAndPrivacy : LoginState.LoggedIn;
 		},
 	}

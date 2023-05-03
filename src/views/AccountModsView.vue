@@ -1,5 +1,6 @@
 <template>
-	<p v-if="!state.hasLoaded">Your mod list is loading...</p>
+	<p v-if="state.errorWhileLoading">Failed to load mod list: {{ state.errorWhileLoading }}</p>
+	<p v-else-if="!state.hasLoaded">Your mod list is loading...</p>
 	<div v-else>
 		<p v-if="state.yourMods.length === 0">You do not have any mods...</p>
 		<ul v-else v-for="mod in state.yourMods">
@@ -11,18 +12,17 @@
 </template>
 
 <script setup lang="ts">
-
 import { onMounted, reactive } from "vue";
 import type { ModSummaryAnonym } from "@/types/mod";
 import { performAPIRequest } from "@/code/apiRequests";
 import { useAuthStore } from "@/stores/auth";
-import { isTypeSuccessfulResponse } from "@/types/api";
+import { APIResponseInvalid, isTypeSuccessfulResponse } from "@/types/api";
 import { isTypeModSummaryAnonymArray } from "@/types/mod";
 
 const authStore = useAuthStore();
-
 const state = reactive({
 	hasLoaded: false,
+	errorWhileLoading: null as null|string,
 	yourMods: [] as ModSummaryAnonym[]
 });
 
@@ -36,12 +36,12 @@ async function loadUserMods() {
 	}
 	const apiResponse = await performAPIRequest('/mod/user-list?identifier=' + authStore.currentUser.identifier);
 	if(!isTypeSuccessfulResponse(apiResponse)) {
+		state.errorWhileLoading = apiResponse.getUserString();
 		return; //Failed!
 	}
 	const response = apiResponse.data;
 	if(!isTypeModSummaryAnonymArray(response)) {
-		//TODO: Further handling ofc...
-		console.log("Failed to query mods from backend, response was:", response)
+		state.errorWhileLoading = new APIResponseInvalid(response).getUserString();
 		return; //Failed!
 	}
 	

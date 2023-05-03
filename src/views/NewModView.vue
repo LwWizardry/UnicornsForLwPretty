@@ -35,7 +35,7 @@
 import { computed, reactive, watch } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { performAPIPostWithSession } from "@/code/apiRequests";
-import { isTypeFailedResponse, isTypeSuccessfulResponse } from "@/types/api";
+import { isTypeSuccessfulResponse } from "@/types/api";
 
 const authStore = useAuthStore();
 
@@ -95,15 +95,12 @@ async function submitMod() {
 	);
 	if(!isTypeSuccessfulResponse(apiResponse)) {
 		state.submitting = false;
-		if(isTypeFailedResponse(apiResponse)) {
-			state.issues = 'Server refused request: ' + apiResponse.message;
-			//TBI: Any required actions? [Highlight specific fields?]
-			return;
-		}
-		state.issues = 'API request failed, see console for details.'
+		//TBI: Actions to handle, in case of failure? (Session timeout, for example).
+		state.issues = apiResponse.getUserString();
 		return;
 	}
 	
+	//TODO: Parse identifier and open the mod's edit view. Or something similar.
 	console.log('Probably success, data:', apiResponse.data)
 	
 	state.issues = 'Mod submitted, reload the page if you want to submit another one - PLEASE DO NOT SPAM MODS! (I will have to delete them all anyway though - later).';

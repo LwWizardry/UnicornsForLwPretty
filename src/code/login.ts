@@ -1,5 +1,5 @@
 import { performAPIRequest, performAPIRequestWithSession } from "@/code/apiRequests";
-import { FailedResponse, isTypeFailedResponse, isTypeSuccessfulResponse } from "@/types/api";
+import { APIResponseInvalid, FailedResponse, isTypeFailedResponse, isTypeSuccessfulResponse } from "@/types/api";
 import {
 	isTypeLoggedInUser,
 	isTypeMessagesToDelete,
@@ -25,15 +25,18 @@ export async function acceptTermsAndPrivacy() {
 	if(!isTypeSuccessfulResponse(apiResponse)) {
 		if (isTypeFailedResponse(apiResponse)) {
 			handleFailureResponse(apiResponse);
+			return;
 		}
-		return; //Failed!
+		loginInformation.value.apiErrorMessage = apiResponse.getUserString();
+		return;
 	}
 	const response = apiResponse.data;
-	//We got a data block!
 	if(!isTypeServerChallenge(response)) {
-		console.error("API returned nonsense:", response);
-		//TODO: notify user of issue!
+		loginInformation.value.apiErrorMessage = new APIResponseInvalid(response).getUserString();
+		return;
 	}
+	//Clear previous errors, as the last request was successful:
+	loginInformation.value.apiErrorMessage = null;
 	
 	loginInformation.value.serverChallenge = response;
 	loginInformation.value.loginState = LoginState.WaitingForComment;
@@ -52,16 +55,18 @@ export async function createdComment() {
 	if(!isTypeSuccessfulResponse(apiResponse)) {
 		if (isTypeFailedResponse(apiResponse)) {
 			handleFailureResponse(apiResponse);
+			return;
 		}
-		return; //Failed!
-	}
-	const response = apiResponse.data;
-	//We got a data block!
-	
-	if(!isTypeMessagesToDelete(response)) {
-		console.error("Weird API data response:", response);
+		loginInformation.value.apiErrorMessage = apiResponse.getUserString();
 		return;
 	}
+	const response = apiResponse.data;
+	if(!isTypeMessagesToDelete(response)) {
+		loginInformation.value.apiErrorMessage = new APIResponseInvalid(response).getUserString();
+		return;
+	}
+	//Clear previous errors, as the last request was successful:
+	loginInformation.value.apiErrorMessage = null;
 	
 	loginInformation.value.messagesToDelete = response.messagesToDelete;
 	loginInformation.value.loginState = LoginState.WaitingForDeletion;
@@ -80,16 +85,18 @@ export async function deletedComment() {
 	if(!isTypeSuccessfulResponse(apiResponse)) {
 		if (isTypeFailedResponse(apiResponse)) {
 			handleFailureResponse(apiResponse);
+			return;
 		}
-		return; //Failed!
-	}
-	const response = apiResponse.data;
-	//We got a data block!
-	
-	if(!isTypeLoggedInUser(response)) {
-		console.error("Weird API data response:", response);
+		loginInformation.value.apiErrorMessage = apiResponse.getUserString();
 		return;
 	}
+	const response = apiResponse.data;
+	if(!isTypeLoggedInUser(response)) {
+		loginInformation.value.apiErrorMessage = new APIResponseInvalid(response).getUserString();
+		return;
+	}
+	//Clear previous errors, as the last request was successful:
+	loginInformation.value.apiErrorMessage = null;
 	
 	authStore.currentUser = response;
 	loginInformation.value.loginState = LoginState.LoggedIn;
@@ -99,7 +106,8 @@ function handleFailureResponse(response: FailedResponse): void {
 	const authStore = useAuthStore(window.__pinia);
 	const { loginInformation } = storeToRefs(authStore);
 	
-	//TODO: Print message somewhere else than console!
+	loginInformation.value.apiErrorMessage = 'API reported issue: ' + response.message;
+	
 	//Handle actions if any:
 	if(response.actions === null) {
 		return; //Done here, no actions.
@@ -116,12 +124,14 @@ function handleFailureResponse(response: FailedResponse): void {
 		} else if(name === "update-comments") {
 			const genericAction = action as any; //TBI: Find a better generic way to receive the right type...
 			if(!isArrayOfType(genericAction.comments, isTypeMessageToDelete)) {
-				console.error("Server sent malformed/invalid comments to delete update: ", genericAction.comments);
+				//Print to console, for debugging.
+				console.error("Server sent malformed/invalid 'comments to delete' update: ", genericAction.comments);
+				loginInformation.value.apiErrorMessage = loginInformation.value.apiErrorMessage + ' | API sent malformed comments to update (see console)';
+				return;
 			}
 			loginInformation.value.messagesToDelete = genericAction.comments;
 		} else {
-			//TODO: Notify user!
-			console.error("UNKNOWN ACTION:", action);
+			loginInformation.value.apiErrorMessage = loginInformation.value.apiErrorMessage + ' | API sent unknown action: ' + name;
 		}
 	}
 }

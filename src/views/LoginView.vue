@@ -34,6 +34,7 @@
 	
 	<br />
 	<p>Instruction:</p>
+	<p v-if="loginInformation.apiErrorMessage">Error while performing API request: {{ loginInformation.apiErrorMessage }}</p>
 	<div class="instruction-box">
 		<div v-if="loginInformation.loginState === LoginState.WaitingForTermsAndPrivacy">
 			<p><input type="checkbox" v-model="loginInformation.acceptTOS"> I accept the <a href="/terms" target="_blank">Terms of Service</a> (required)</p>
