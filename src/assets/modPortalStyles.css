@@ -1,0 +1,22 @@
+
+/* Just anything to not let me be fully unwell */
+.custom-button-style {
+	background-color: #333;
+	border: green solid 1px;
+	border-radius: 4px;
+	color: #aaa;
+	padding: 2px 8px 2px 8px;
+}
+
+.custom-button-style:hover {
+	background-color: #555;
+	color: #ccc;
+}
+.custom-button-style:active {
+	background-color: #444;
+	color: #bbb;
+}
+.custom-button-style:disabled {
+	background-color: #222;
+	border-color: #040;
+}
