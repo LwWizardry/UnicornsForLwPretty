@@ -2,6 +2,9 @@
 	<p v-if="state.loadingErrorMessage">Error while loading: {{ state.loadingErrorMessage }}</p>
 	<p v-else-if="!state.hasLoaded">Loading mod details...</p>
 	<div v-else-if="state.modToDisplay">
+		<div v-if="authStore.currentUser !== null && state.modToDisplay.owner.identifier == authStore.currentUser.identifier">
+			<RouterLink :to="{name: 'mod-edit', params: {modID: modIdentifier}}">Edit this mod.</RouterLink>
+		</div>
 		<p>Mod title: {{ state.modToDisplay.title }}</p>
 		<p>Caption: {{ state.modToDisplay.caption }}</p>
 		<p>Maintainer: {{ state.modToDisplay.owner.getDisplayName() }}</p>
@@ -19,9 +22,10 @@ import { APIResponseInvalid, isTypeSuccessfulResponse } from "@/types/api";
 import type { ModDetails } from "@/types/mod";
 import { isTypeModDetailsOptional, parseTypeModDetailsOptional } from "@/types/mod";
 import { isObjectNullable } from "@/helper/jsonValidator";
+import { useAuthStore } from "@/stores/auth";
 
-const identity = useRoute().params.mod;
-
+const modIdentifier = useRoute().params.modID;
+const authStore = useAuthStore();
 const state = reactive({
 	hasLoaded: false,
 	loadingErrorMessage: null as null|string,
@@ -29,7 +33,7 @@ const state = reactive({
 });
 
 async function loadMod() {
-	const apiResponse = await performAPIRequest('/mod-details?identifier=' + identity);
+	const apiResponse = await performAPIRequest('/mod-details?identifier=' + modIdentifier);
 	if(!isTypeSuccessfulResponse(apiResponse)) {
 		state.loadingErrorMessage = apiResponse.getUserString();
 		return; //Failed!

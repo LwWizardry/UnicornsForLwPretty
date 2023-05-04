@@ -79,14 +79,19 @@ const router = createRouter({
 		},
 		//Mod viewing routes:
 		{
-			path: '/mod/:mod',
+			path: '/mod/:modID',
 			name: 'mod-details',
 			component: () => import('../views/ModDetailView.vue'),
 		},
 		{
-			path: '/mod-direct/:mod',
+			path: '/mod/:modID/edit',
+			name: 'mod-edit',
+			component: () => import('../views/ModEditView.vue'),
+		},
+		{
+			path: '/mod-direct/:modID',
 			redirect: to => {
-				return '/mod/' + to.params.mod;
+				return '/mod/' + to.params.modID;
 			},
 		},
 	]

@@ -5,7 +5,8 @@
 		<p v-if="state.yourMods.length === 0">You do not have any mods...</p>
 		<ul v-else v-for="mod in state.yourMods">
 			<li>
-				<router-link :to="{name: 'mod-details', params: {'mod': 'mod-' + mod.identifier}}">Name: {{mod.title}}</router-link>
+				<router-link :to="{name: 'mod-details', params: {modID: 'mod-' + mod.identifier}}">Name: {{mod.title}}</router-link>
+				(<router-link :to="{name: 'mod-edit', params: {modID: 'mod-' + mod.identifier}}">Edit!</router-link>)
 			</li>
 		</ul>
 	</div>
