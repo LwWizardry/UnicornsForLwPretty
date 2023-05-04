@@ -7,7 +7,7 @@
 			</nav>
 		</header>
 		
-		<router-view name="AccountViewer"></router-view>
+		<router-view />
 	</div>
 	<p v-else><RouterLink :to="{name: 'login'}">Login first...</RouterLink></p>
 </template>
