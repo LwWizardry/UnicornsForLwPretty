@@ -49,11 +49,12 @@ const state = reactive({
 });
 
 const isValid = computed(() => {
-	const length = state.content.caption.trim().length;
+	const titleLength = state.content.title.trim().length;
+	const captionLength = state.content.caption.trim().length;
 	return authStore.isLoggedIn
 		&& !state.submitting
-		&& length >= 10 && length <= 200
-		&& state.content.title.trim().length >= 3;
+		&& captionLength >= 10 && captionLength <= 200
+		&& titleLength >= 3 && titleLength <= 50
 });
 
 watch(state.content, () => {
@@ -81,10 +82,13 @@ updateIssue();
 
 async function submitMod() {
 	const session = authStore.currentUser?.token;
-	if(!isValid || !session) {
+	if(!isValid.value || !session) {
 		return;
 	}
 	state.submitting = true;
+	//Trim data before sending:
+	state.content.title = state.content.title.trim();
+	state.content.caption = state.content.caption.trim();
 	
 	const apiResponse = await performAPIPostWithSession(
 		'/mod/post',
@@ -109,7 +113,6 @@ async function submitMod() {
 </script>
 
 <style scoped>
-
 	p {
 		margin: 8px 0;
 	}
