@@ -48,13 +48,19 @@ const state = reactive({
 	},
 });
 
+const titleLength = computed(() => {
+	return Array.from(state.content.title).length;
+});
+
+const captionLength = computed(() => {
+	return Array.from(state.content.caption).length;
+});
+
 const isValid = computed(() => {
-	const titleLength = state.content.title.trim().length;
-	const captionLength = state.content.caption.trim().length;
 	return authStore.isLoggedIn
 		&& !state.submitting
-		&& captionLength >= 10 && captionLength <= 200
-		&& titleLength >= 3 && titleLength <= 50
+		&& captionLength.value >= 10 && captionLength.value <= 200
+		&& titleLength.value >= 3 && titleLength.value <= 50
 });
 
 watch(state.content, () => {
@@ -62,20 +68,18 @@ watch(state.content, () => {
 });
 
 function updateIssue() {
-	const content = state.content;
 	if(!authStore.isLoggedIn) {
 		state.issues = 'Not logged in, log in to submit a mod.';
-	} else if(content.title.trim().length < 3) {
+	} else if(titleLength.value < 3) {
 		state.issues = 'Title is too short, should have at least 3 letters.';
+	} else if(titleLength.value > 50) {
+		state.issues = 'Title is too long, should have at most 50 letters.';
+	} else if(captionLength.value < 10) {
+		state.issues = 'Caption is too short, should have at least 10 letters.';
+	} else if(captionLength.value >= 200) {
+		state.issues = 'Caption is too long, should have at most 200 letters.';
 	} else {
-		const captionLength = content.caption.trim().length;
-		if(captionLength < 10) {
-			state.issues = 'Caption is too short, should have at least 10 letters.';
-		} else if(captionLength >= 200) {
-			state.issues = 'Caption is too long, should have at most 200 letters.';
-		} else {
-			state.issues = 'None';
-		}
+		state.issues = 'None';
 	}
 }
 updateIssue();

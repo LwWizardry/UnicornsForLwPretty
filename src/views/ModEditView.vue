@@ -83,7 +83,8 @@ const isDirtyTitle = computed(() => {
 	if(!state.modDetails) {
 		return false;
 	}
-	return state.modDetails.title !== state.changes.title
+	return state.modDetails.title.length !== state.changes.title.length
+		|| state.modDetails.title !== state.changes.title
 });
 
 const isDirtyCaption = computed(() => {
@@ -101,11 +102,11 @@ const isDirty = computed(() => {
 });
 
 const titleLength = computed(() => {
-	return state.changes.title.length;
+	return Array.from(state.changes.title).length;
 });
 
 const captionLength = computed(() => {
-	return state.changes.title.length;
+	return Array.from(state.changes.caption).length;
 });
 
 const isValidTitleLower = computed(() => {
