@@ -44,7 +44,7 @@ async function handleResponse(call: () => Promise<AxiosResponse<any>>): Promise<
 		if (!data) {
 			//But the expected 'data' block from the API is missing!
 			//Check for error/failure:
-			const ret = debugRequestContent(response.data);
+			const ret = debugRequestContent(response.data, response.request.responseURL);
 			if(ret === null) {
 				return new APIResponseInvalid(data);
 			}
@@ -78,7 +78,7 @@ function debugAxiosError(error: AxiosError): APIResponseTypes {
 		
 		if(response.data) {
 			//There is data sent by the server, lets debug that:
-			const ret = debugRequestContent(response.data);
+			const ret = debugRequestContent(response.data, error.request.responseURL);
 			if(ret === null) {
 				return new APIResponseInvalid(JSON.stringify(response.data));
 			}
@@ -102,22 +102,22 @@ function debugAxiosError(error: AxiosError): APIResponseTypes {
 	return new NotImplementedYetResponse();
 }
 
-function debugRequestContent(content: any): null|APIResponseTypes {
+function debugRequestContent(content: any, remote: string): null|APIResponseTypes {
 	if (content.error) {
-		return debugErrorContent(content.error);
+		return debugErrorContent(content.error, remote);
 	} else if (content.failure) {
 		return debugFailureContent(content.failure);
 	}
 	return null;
 }
 
-function debugErrorContent(error: any): null|APIResponseTypes {
+function debugErrorContent(error: any, remote: string): null|APIResponseTypes {
 	//The backend sent the 'error' type message, this means something went wrong which under normal conditions should not happen:
 	
 	//Check the type of the error and parse/handle it appropriately:
 	if (error.type == "bad-request" && isString(error.message)) {
 		//This error is unexpected and caused by the client. Missing header or similar. Should normally never happen.
-		return new APIClaimsAbuse('Server states that endpoint ' + error.request.responseURL + ' is wrongly used: ' + error.message);
+		return new APIClaimsAbuse('Server states that endpoint ' + remote + ' is wrongly used: ' + error.message);
 	}
 	
 	if (error.type == "internal-descriptive" && isString(error.message)) {
