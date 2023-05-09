@@ -89,20 +89,28 @@ export function isTypeModSummaryAnonymArray(value: any): value is ModSummaryAnon
 }
 
 export interface ModDetails {
+	//Summary types:
 	identifier: string,
 	//TODO: Add optional custom URL identifier.
 	title: string,
 	caption: string,
 	image: null,
 	owner: MPUser,
-	//TODO: All other relevant fields...
+	//Non-summary types:
+	description: string,
+	linkSourceCode: null|string,
 }
 
 export function isTypeModDetailsOptional(value: any): value is ModDetails {
 	if(value === null) {
 		return true;
 	}
-	return isTypeModSummary(value)
+	return isString(value.title)
+		&& isString(value.caption)
+		&& isString(value.identifier)
+		&& isTypeMPUser(value.owner)
+		&& isString(value.description)
+		&& isStringNullable(value.linkSourceCode)
 }
 
 export function parseTypeModDetailsOptional(value: ModDetails) {

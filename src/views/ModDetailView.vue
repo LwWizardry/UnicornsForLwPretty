@@ -5,9 +5,13 @@
 		<div v-if="authStore.currentUser !== null && state.modToDisplay.owner.identifier == authStore.currentUser.identifier">
 			<RouterLink :to="{name: 'mod-edit', params: {modID: modIdentifier}}">Edit this mod.</RouterLink>
 		</div>
-		<p>Mod title: {{ state.modToDisplay.title }}</p>
-		<p>Caption: {{ state.modToDisplay.caption }}</p>
-		<p>Maintainer: {{ state.modToDisplay.owner.getDisplayName() }}</p>
+		<h1>Mod: {{ (state.modToDisplay as ModDetails).title }}</h1>
+		<p>Caption: <span class="description">{{ (state.modToDisplay as ModDetails).caption }}</span></p>
+		<p>Maintainer: {{ (state.modToDisplay as ModDetails).owner.getDisplayName() }}</p>
+		<p v-if="(state.modToDisplay as ModDetails).linkSourceCode">
+			Source code link: <a :href="(state.modToDisplay as ModDetails).linkSourceCode">{{(state.modToDisplay as ModDetails).linkSourceCode}}</a>
+		</p>
+		<p>Description: <span class="description" v-html="state.descriptionHTML" /></p>
 	</div>
 	<div v-else>
 		<p>This mod does nod exist!</p>
@@ -30,6 +34,7 @@ const state = reactive({
 	hasLoaded: false,
 	loadingErrorMessage: null as null|string,
 	modToDisplay: null as null|ModDetails,
+	descriptionHTML: '',
 });
 
 async function loadMod() {
@@ -44,6 +49,11 @@ async function loadMod() {
 		return; //Failed!
 	}
 	state.modToDisplay = parseTypeModDetailsOptional(response.details);
+	if(state.modToDisplay !== null) {
+		state.descriptionHTML = state.modToDisplay.description.length === 0 ?
+			'-none-' :
+			window.__markdown.mainInstance.render(state.modToDisplay.description);
+	}
 	state.hasLoaded = true;
 }
 
@@ -53,4 +63,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.description {
+	display: block;
+	background: #222222;
+	border-radius: 10px;
+	padding: 2px 10px;
+}
 </style>

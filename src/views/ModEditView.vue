@@ -26,6 +26,14 @@
 			Caption:<br />
 			<textarea v-model="state.changes.caption" :disabled="state.updating"/>
 		</p>
+		<p>
+			Source code link:<br />
+			<input type="text" v-model="state.changes.linkSourceCode" :disabled="state.updating"/>
+		</p>
+		<p>
+			Description:<br />
+			<textarea v-model="state.changes.description" :disabled="state.updating"/>
+		</p>
 		
 		<p>
 			Status: {{ statusText }} <br />
@@ -64,6 +72,8 @@ const state = reactive({
 	changes: {
 		title: '',
 		caption: '',
+		description: '',
+		linkSourceCode: '',
 	},
 	//Prevent updating, while update is in progress:
 	updating: false,
@@ -76,6 +86,8 @@ function setMod(mod: null|ModDetails) {
 	if(mod) {
 		state.changes.title = mod.title;
 		state.changes.caption = mod.caption;
+		state.changes.description = mod.description;
+		state.changes.linkSourceCode = mod.linkSourceCode === null ? '' : mod.linkSourceCode;
 	}
 }
 
@@ -96,9 +108,32 @@ const isDirtyCaption = computed(() => {
 		|| state.modDetails.caption !== state.changes.caption //Rather expensive...
 });
 
+const isDirtyDescription = computed(() => {
+	if(!state.modDetails) {
+		return false;
+	}
+	//Let's hope that the length is cached and this will leverage string comparisons:
+	return state.modDetails.description.length !== state.changes.description.length
+		|| state.modDetails.description !== state.modDetails.caption //Rather expensive...
+});
+
+const isDirtyLinkSourceCode = computed(() => {
+	if(!state.modDetails) {
+		return false;
+	}
+	//If was null:
+	if(!state.modDetails.linkSourceCode) {
+		return state.changes.linkSourceCode.length !== 0;
+	}
+	return state.modDetails.linkSourceCode.length !== state.changes.linkSourceCode.length
+		|| state.modDetails.linkSourceCode !== state.modDetails.linkSourceCode
+});
+
 const isDirty = computed(() => {
 	return isDirtyTitle.value
 		|| isDirtyCaption.value
+		|| isDirtyDescription.value
+		|| isDirtyLinkSourceCode.value
 });
 
 const titleLength = computed(() => {
@@ -125,11 +160,31 @@ const isValidCaptionUpper = computed(() => {
 	return captionLength.value <= 200
 });
 
+const isValidDescription = computed(() => {
+	//Subject to change, can be increased anytime:
+	return Array.from(state.changes.description).length <= 10000
+});
+
+const isValidLinkSourceCodeLength = computed(() => {
+	//Subject to change, can be increased anytime:
+	return Array.from(state.changes.linkSourceCode).length <= 500
+});
+
+const isValidLinkSourceCodeFormat = computed(() => {
+	//Subject to change, can be increased anytime:
+	const link = state.changes.linkSourceCode.trim();
+	return Boolean(link.length === 0
+		|| link.match(/^https?:\/\/([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|[^\/.]+\.[^\/.0-9]+)(\/.*)?$/))
+});
+
 const isValid = computed(() => {
 	return isValidTitleLower.value
 		&& isValidTitleUpper.value
 		&& isValidCaptionLower.value
 		&& isValidCaptionUpper.value
+		&& isValidDescription.value
+		&& isValidLinkSourceCodeLength.value
+		&& isValidLinkSourceCodeFormat.value
 });
 
 const statusText = computed(() => {
@@ -153,10 +208,19 @@ const statusText = computed(() => {
 			return 'Title is too big, must be at most 50 letters long.';
 		}
 		if(!isValidCaptionLower.value) {
-			return 'Caption is too small, but be at least 10 letters long.';
+			return 'Caption is too small, must be at least 10 letters long.';
 		}
 		if(!isValidCaptionUpper.value) {
-			return 'Caption is too big, but be at most 200 letters long.';
+			return 'Caption is too big, must be at most 200 letters long.';
+		}
+		if(!isValidDescription.value) {
+			return 'Description is too big, must be at most 10K letters long. (Contact support, if you need more).'
+		}
+		if(!isValidLinkSourceCodeLength.value) {
+			return 'Source code link, may at most be 500 characters long. (Contact support, if you need more).'
+		}
+		if(!isValidLinkSourceCodeFormat.value) {
+			return 'Source code link must start with http(s):// followed by a domain or IP address.'
 		}
 	}
 	return 'Changes done, press "Update" to apply them!';
@@ -192,6 +256,8 @@ async function update() {
 		identifier: state.modDetails.identifier,
 		newTitle: isDirtyTitle.value ? state.changes.title : null,
 		newCaption: isDirtyCaption.value ? state.changes.caption : null,
+		newDescription: isDirtyDescription.value ? state.changes.description : null,
+		newLinkSourceCode: isDirtyLinkSourceCode.value ? state.changes.linkSourceCode : null,
 	};
 	
 	const apiResponse = await performAPIPostWithSession('/mod/edit', authStore.currentUser.token, {data: updateData});
@@ -205,6 +271,9 @@ async function update() {
 	//There is no data returned, just accept what was sent:
 	state.modDetails.title = state.changes.title;
 	state.modDetails.caption = state.changes.caption;
+	state.modDetails.description = state.changes.description;
+	const trimmedSourceCode = state.changes.linkSourceCode.trim();
+	state.modDetails.linkSourceCode = trimmedSourceCode.length === 0 ? null : trimmedSourceCode;
 	state.updating = false;
 }
 </script>
