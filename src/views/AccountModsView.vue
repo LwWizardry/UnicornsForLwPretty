@@ -1,8 +1,12 @@
 <template>
+	<!-- Login state is taken care of parent AccountView. -->
+	<RouterLink :to="{name: 'new-mod'}" class="custom-button-style">Add new mod</RouterLink>
+	
+	<h1>Your mods:</h1>
 	<p v-if="state.errorWhileLoading">Failed to load mod list: {{ state.errorWhileLoading }}</p>
-	<p v-else-if="!state.hasLoaded">Your mod list is loading...</p>
+	<p v-else-if="!state.hasLoaded">Mod list is loading...</p>
 	<div v-else>
-		<p v-if="state.yourMods.length === 0">You do not have any mods...</p>
+		<p v-if="state.yourMods.length === 0">You do not have any mods yet...</p>
 		<ul v-else v-for="mod in state.yourMods">
 			<li>
 				<router-link :to="{name: 'mod-details', params: {modID: 'mod-' + mod.identifier}}">Name: {{mod.title}}</router-link>
@@ -10,6 +14,9 @@
 			</li>
 		</ul>
 	</div>
+	
+	<!-- Collaborating mods -->
+	<!-- Favored/Starred/Subscribed mods -->
 </template>
 
 <script setup lang="ts">
