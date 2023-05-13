@@ -26,6 +26,57 @@
 			Caption:<br />
 			<textarea v-model="state.changes.caption" :disabled="state.updating"/>
 		</p>
+		<div>
+			Logo:<br />
+			<button
+				class="custom-button-style"
+				@click="logoChooser.click()"
+				:disabled="state.updating">
+				Choose image.
+			</button>
+			<button
+				v-if="state.changes.image"
+				class="custom-button-style"
+				@click="state.changes.image = null"
+				:disabled="state.updating">
+				Delete image.
+			</button>
+			<button
+				v-if="state.changes.image !== (state.modDetails as ModDetails).image"
+				class="custom-button-style"
+				@click="state.changes.image = (state.modDetails as ModDetails).image"
+				:disabled="state.updating">
+				Restore original.
+			</button>
+			<br />
+			
+			<i>Max allowed file size is 14MB.</i>
+			<br />
+			
+			<!-- TODO: Drop support! -->
+			<input
+				type="file"
+				accept="image/gif, image/jpeg, image/webp, image/png"
+				class="custom-button-style-inner"
+				style="display: none"
+				
+				ref="logoChooser"
+				@change="logoChange"
+			>
+			
+			<p>
+				<img v-if="isString(state.changes.image)"
+				     :src="imageFromMod(state.modDetails as ModDetails)"
+				     alt="Mod Logo"
+				     class="logo-wrapper"
+				/>
+				<img v-else-if="state.changes.image"
+				     :src="state.changes.image.blob"
+				     alt="Mod Logo"
+				     class="logo-wrapper"
+				/>
+			</p>
+		</div>
 		<p>
 			Source code link:<br />
 			<input type="text" v-model="state.changes.linkSourceCode" :disabled="state.updating"/>
@@ -50,16 +101,23 @@
 <script setup lang="ts">
 
 import { useAuthStore } from "@/stores/auth";
-import { computed, onMounted, reactive } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import type { ModDetails } from "@/types/mod";
 import { performAPIPostWithSession, performAPIRequest } from "@/code/apiRequests";
 import {
 	APIResponseInvalid,
 	isTypeSuccessfulResponse,
 } from "@/types/api";
-import { isObjectNullable } from "@/helper/jsonValidator";
-import { isTypeModDetailsOptional, parseTypeModDetailsOptional } from "@/types/mod";
+import { isObjectNullable, isString } from "@/helper/jsonValidator";
+import { imageFromMod, isTypeModDetailsOptional, parseTypeModDetailsOptional } from "@/types/mod";
 import { useRoute } from "vue-router";
+
+interface ImageData {
+	blob: string,
+	data: File,
+}
+
+const logoChooser = ref<HTMLInputElement | null>(null);
 
 const modIdentifier = useRoute().params.modID;
 const authStore = useAuthStore();
@@ -74,12 +132,42 @@ const state = reactive({
 		caption: '',
 		description: '',
 		linkSourceCode: '',
+		image: null as null|string|ImageData,
 	},
 	//Prevent updating, while update is in progress:
 	updating: false,
 	//Anything may insert errors into this text:
 	errorText: null as null|string,
 });
+
+function logoChange(event: any) {
+	state.errorText = null;
+	const files: FileList = event.target.files;
+	if(files.length !== 1) {
+		//TODO: Error somewhere else.
+		console.error('Somehow received more than one logo file via file chooser:', files);
+		return;
+	}
+	const file = files[0];
+	console.log(file);
+	if(file.size > 14000000) {
+		//TODO: This way of setting errors is bad, there should be a popout. It is too persistent until some other data changes.
+		state.errorText = 'Image file is too large, max allowed is 14MB.';
+		state.changes.image = null;
+		return;
+	}
+	state.changes.image = {
+		blob: URL.createObjectURL(file),
+		data: file,
+	};
+}
+
+function logoClear() {
+	if(!logoChooser.value) {
+		return;
+	}
+	logoChooser.value.value = '';
+}
 
 function setMod(mod: null|ModDetails) {
 	state.modDetails = mod;
@@ -88,6 +176,7 @@ function setMod(mod: null|ModDetails) {
 		state.changes.caption = mod.caption;
 		state.changes.description = mod.description;
 		state.changes.linkSourceCode = mod.linkSourceCode === null ? '' : mod.linkSourceCode;
+		state.changes.image = mod.image;
 	}
 }
 
@@ -114,7 +203,7 @@ const isDirtyDescription = computed(() => {
 	}
 	//Let's hope that the length is cached and this will leverage string comparisons:
 	return state.modDetails.description.length !== state.changes.description.length
-		|| state.modDetails.description !== state.modDetails.caption //Rather expensive...
+		|| state.modDetails.description !== state.modDetails.description //Rather expensive...
 });
 
 const isDirtyLinkSourceCode = computed(() => {
@@ -129,11 +218,19 @@ const isDirtyLinkSourceCode = computed(() => {
 		|| state.modDetails.linkSourceCode !== state.modDetails.linkSourceCode
 });
 
+const isDirtyLogo = computed(() => {
+	if(!state.modDetails) {
+		return false;
+	}
+	return state.modDetails.image !== state.changes.image
+});
+
 const isDirty = computed(() => {
 	return isDirtyTitle.value
 		|| isDirtyCaption.value
 		|| isDirtyDescription.value
 		|| isDirtyLinkSourceCode.value
+		|| isDirtyLogo.value
 });
 
 const titleLength = computed(() => {
@@ -245,6 +342,16 @@ onMounted(() => {
 	loadMod();
 });
 
+const file2Base64 = (file:File):Promise<string> => {
+	return new Promise<string> ((resolve,reject)=> {
+		const reader = new FileReader();
+		reader.readAsDataURL(file);
+		//Filer prefix: 'data:image/png;base64,<actualBASE64>'
+		reader.onload = () => resolve(reader.result?.toString().replace(/^data:(.*,)?/, '') || '');
+		reader.onerror = error => reject(error);
+	})
+}
+
 async function update() {
 	state.errorText = null;
 	if(!isDirty || !isValid || state.updating || !state.modDetails || !authStore.currentUser) {
@@ -258,6 +365,9 @@ async function update() {
 		newCaption: isDirtyCaption.value ? state.changes.caption : null,
 		newDescription: isDirtyDescription.value ? state.changes.description : null,
 		newLinkSourceCode: isDirtyLinkSourceCode.value ? state.changes.linkSourceCode : null,
+		newLogo: !isDirtyLogo.value ? null : {
+			data: state.changes.image === null ? null : await file2Base64(state.changes.image.data),
+		},
 	};
 	
 	const apiResponse = await performAPIPostWithSession('/mod/edit', authStore.currentUser.token, {data: updateData});
@@ -274,6 +384,8 @@ async function update() {
 	state.modDetails.description = state.changes.description;
 	const trimmedSourceCode = state.changes.linkSourceCode.trim();
 	state.modDetails.linkSourceCode = trimmedSourceCode.length === 0 ? null : trimmedSourceCode;
+	state.modDetails.image = apiResponse.data.image ? apiResponse.data.image : null;
+	state.changes.image = state.modDetails.image;
 	state.updating = false;
 }
 </script>
@@ -281,5 +393,13 @@ async function update() {
 <style scoped>
 	p {
 		margin: 10px 0;
+	}
+	
+	.logo-wrapper {
+		max-height: 250px;
+		max-width: 1000px;
+		border-radius: 20px;
+		padding: 10px;
+		border: solid 1px green;
 	}
 </style>

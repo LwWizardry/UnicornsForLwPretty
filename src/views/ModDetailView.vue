@@ -6,6 +6,7 @@
 			<RouterLink :to="{name: 'mod-edit', params: {modID: modIdentifier}}">Edit this mod.</RouterLink>
 		</div>
 		<h1>Mod: {{ (state.modToDisplay as ModDetails).title }}</h1>
+		<img v-if="(state.modToDisplay as ModDetails).image" :src="imageFromMod(state.modToDisplay as ModDetails)" class="logo" />
 		<p>Caption: <span class="description">{{ (state.modToDisplay as ModDetails).caption }}</span></p>
 		<p>Maintainer: {{ (state.modToDisplay as ModDetails).owner.getDisplayName() }}</p>
 		<p v-if="(state.modToDisplay as ModDetails).linkSourceCode">
@@ -24,7 +25,7 @@ import { useRoute } from "vue-router";
 import { performAPIRequest } from "@/code/apiRequests";
 import { APIResponseInvalid, isTypeSuccessfulResponse } from "@/types/api";
 import type { ModDetails } from "@/types/mod";
-import { isTypeModDetailsOptional, parseTypeModDetailsOptional } from "@/types/mod";
+import { imageFromMod, isTypeModDetailsOptional, parseTypeModDetailsOptional } from "@/types/mod";
 import { isObjectNullable } from "@/helper/jsonValidator";
 import { useAuthStore } from "@/stores/auth";
 
@@ -63,6 +64,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.logo {
+	max-height: 250px;
+	max-width: 1000px;
+}
 .description {
 	display: block;
 	background: #222222;
