@@ -9,7 +9,8 @@
 		<p v-else-if="!state.mods">Mod list is loading...</p>
 		<ul v-else>
 			<li v-for="mod in state.mods" :key="mod.title" class="mod-summary">
-				<RouterLink :to="'/mod/mod-' + mod.identifier">
+				<RouterLink :to="'/mod/mod-' + mod.identifier" class="mod">
+						<img v-if="mod.image" :src="imageFromMod(mod)" class="logo"/>
 						<h3>{{ mod.title }}</h3>
 						<p>{{ mod.caption }}</p>
 						<p>By {{ mod.owner.getDisplayName() }}</p>
@@ -24,8 +25,8 @@ import {onMounted, reactive} from "vue";
 import { useAuthStore } from "@/stores/auth";
 import type { ModSummary } from "@/types/mod";
 import { performAPIRequest } from "@/code/apiRequests";
-import { isTypeModSummaryArray, parseTypeModSummaryArray } from "@/types/mod";
-import { APIResponseInvalid, isTypeSuccessfulResponse, UnexpectedAPIResponse } from "@/types/api";
+import { imageFromMod, isTypeModSummaryArray, parseTypeModSummaryArray } from "@/types/mod";
+import { APIResponseInvalid, isTypeSuccessfulResponse } from "@/types/api";
 
 const authStore = useAuthStore();
 
@@ -53,3 +54,17 @@ async function loadMods() {
 	state.mods = parseTypeModSummaryArray(response);
 }
 </script>
+
+<style scoped>
+	.mod {
+		background-color: #222;
+		border-radius: 10px;
+		padding: 10px;
+		display: block;
+		margin: 5px;
+	}
+	.logo {
+		max-width: 1000px;
+		max-height: 100px;
+	}
+</style>

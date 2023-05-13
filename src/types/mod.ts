@@ -39,7 +39,7 @@ export interface ModSummary {
 	//TODO: Add optional custom URL identifier.
 	title: string,
 	caption: string,
-	image: null,
+	image: null|string,
 	owner: MPUser,
 }
 
@@ -47,8 +47,8 @@ export function isTypeModSummary(value: any): value is ModSummary {
 	return isString(value.title)
 		&& isString(value.caption)
 		&& isString(value.identifier)
+		&& isStringNullable(value.image)
 		&& isTypeMPUser(value.owner)
-	//TODO: Image, as soon as support for it.
 }
 
 export function parseTypeModSummary(value: ModSummary) {
@@ -74,14 +74,14 @@ export interface ModSummaryAnonym {
 	//TODO: Add optional custom URL identifier.
 	title: string,
 	caption: string,
-	image: null,
+	image: null|string,
 }
 
 export function isTypeModSummaryAnonym(value: any): value is ModSummaryAnonym {
 	return isString(value.title)
 		&& isString(value.caption)
 		&& isString(value.identifier)
-	//TODO: Image, as soon as support for it.
+		&& isStringNullable(value.image)
 }
 
 export function isTypeModSummaryAnonymArray(value: any): value is ModSummaryAnonym[] {
@@ -94,11 +94,15 @@ export interface ModDetails {
 	//TODO: Add optional custom URL identifier.
 	title: string,
 	caption: string,
-	image: null,
+	image: null|string,
 	owner: MPUser,
 	//Non-summary types:
 	description: string,
 	linkSourceCode: null|string,
+}
+
+export function imageFromMod(mod: ModDetails|ModSummaryAnonym|ModSummary): string {
+	return import.meta.env.VITE_BACKEND + '/assets/logos/' + mod.identifier + '/' + mod.image;
 }
 
 export function isTypeModDetailsOptional(value: any): value is ModDetails {
@@ -108,6 +112,7 @@ export function isTypeModDetailsOptional(value: any): value is ModDetails {
 	return isString(value.title)
 		&& isString(value.caption)
 		&& isString(value.identifier)
+		&& isStringNullable(value.image)
 		&& isTypeMPUser(value.owner)
 		&& isString(value.description)
 		&& isStringNullable(value.linkSourceCode)
