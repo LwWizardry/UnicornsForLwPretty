@@ -4,8 +4,9 @@
 
 <script setup lang="ts">
 import content from '/src/assets/legal/imprint.html?raw';
+import { restoreContact } from "@/helper/contactRestoration";
 
-const imprintHTML = content;
+const imprintHTML = restoreContact(content);
 </script>
 
 <style scoped>
