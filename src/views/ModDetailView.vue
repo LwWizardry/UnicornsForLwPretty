@@ -6,11 +6,11 @@
 			<RouterLink :to="{name: 'mod-edit', params: {modID: modIdentifier}}">Edit this mod.</RouterLink>
 		</div>
 		<h1>Mod: {{ (state.modToDisplay as ModDetails).title }}</h1>
-		<img v-if="(state.modToDisplay as ModDetails).image" :src="imageFromMod(state.modToDisplay as ModDetails)" class="logo" />
+		<img v-if="(state.modToDisplay as ModDetails).image" :src="imageFromMod(state.modToDisplay as ModDetails)" class="logo" alt="Mod logo"/>
 		<p>Caption: <span class="description">{{ (state.modToDisplay as ModDetails).caption }}</span></p>
 		<p>Maintainer: {{ (state.modToDisplay as ModDetails).owner.getDisplayName() }}</p>
 		<p v-if="(state.modToDisplay as ModDetails).linkSourceCode">
-			Source code link: <a :href="(state.modToDisplay as ModDetails).linkSourceCode">{{(state.modToDisplay as ModDetails).linkSourceCode}}</a>
+			Source code link: <a :href="(state.modToDisplay as ModDetails).linkSourceCode as string">{{(state.modToDisplay as ModDetails).linkSourceCode}}</a>
 		</p>
 		<p>Description: <span class="description" v-html="state.descriptionHTML" /></p>
 	</div>

@@ -17,7 +17,7 @@
 	
 	<div v-else>
 		
-		<p>Editing mod with ID: {{ state.modDetails.identifier }}</p>
+		<p>Editing mod with ID: {{ (state.modDetails as ModDetails).identifier }}</p>
 		<p>
 			Title:<br />
 			<input type="text" v-model="state.changes.title" :disabled="state.updating"/>
@@ -30,7 +30,7 @@
 			Logo:<br />
 			<button
 				class="custom-button-style"
-				@click="logoChooser.click()"
+				@click="logoChooser?.click()"
 				:disabled="state.updating">
 				Choose image.
 			</button>
@@ -71,7 +71,7 @@
 				     class="logo-wrapper"
 				/>
 				<img v-else-if="state.changes.image"
-				     :src="state.changes.image.blob"
+				     :src="(state.changes.image as ImageData).blob"
 				     alt="Mod Logo"
 				     class="logo-wrapper"
 				/>
@@ -160,13 +160,6 @@ function logoChange(event: any) {
 		blob: URL.createObjectURL(file),
 		data: file,
 	};
-}
-
-function logoClear() {
-	if(!logoChooser.value) {
-		return;
-	}
-	logoChooser.value.value = '';
 }
 
 function setMod(mod: null|ModDetails) {
@@ -366,7 +359,7 @@ async function update() {
 		newDescription: isDirtyDescription.value ? state.changes.description : null,
 		newLinkSourceCode: isDirtyLinkSourceCode.value ? state.changes.linkSourceCode : null,
 		newLogo: !isDirtyLogo.value ? null : {
-			data: state.changes.image === null ? null : await file2Base64(state.changes.image.data),
+			data: state.changes.image === null ? null : await file2Base64((state.changes.image as ImageData).data),
 		},
 	};
 	
