@@ -18,82 +18,85 @@
 	<div v-else>
 		
 		<p>Editing mod with ID: {{ (state.modDetails as ModDetails).identifier }}</p>
-		<p>
-			Title:<br />
-			<input type="text" v-model="state.changes.title" :disabled="state.updating"/>
-		</p>
-		<p>
-			Caption:<br />
-			<textarea v-model="state.changes.caption" :disabled="state.updating"/>
-		</p>
-		<div>
-			Logo:<br />
-			<button
-				class="custom-button-style"
-				@click="logoChooser?.click()"
-				:disabled="state.updating">
-				Choose image.
-			</button>
-			<button
-				v-if="state.changes.image"
-				class="custom-button-style"
-				@click="state.changes.image = null"
-				:disabled="state.updating">
-				Delete image.
-			</button>
-			<button
-				v-if="state.changes.image !== (state.modDetails as ModDetails).image"
-				class="custom-button-style"
-				@click="state.changes.image = (state.modDetails as ModDetails).image"
-				:disabled="state.updating">
-				Restore original.
-			</button>
-			<br />
-			
-			<i>Max allowed file size is 14MB.</i>
-			<br />
-			
-			<!-- TODO: Drop support! -->
-			<input
-				type="file"
-				accept="image/gif, image/jpeg, image/webp, image/png"
-				class="custom-button-style-inner"
-				style="display: none"
+		
+		<div class="content-box">
+			<p>
+				Title:<br />
+				<input type="text" v-model="state.changes.title" :disabled="state.updating"/>
+			</p>
+			<p>
+				Caption:<br />
+				<textarea v-model="state.changes.caption" :disabled="state.updating"/>
+			</p>
+			<div>
+				Logo:<br />
+				<button
+					class="custom-button-style"
+					@click="logoChooser?.click()"
+					:disabled="state.updating">
+					Choose image.
+				</button>
+				<button
+					v-if="state.changes.image"
+					class="custom-button-style"
+					@click="state.changes.image = null"
+					:disabled="state.updating">
+					Delete image.
+				</button>
+				<button
+					v-if="state.changes.image !== (state.modDetails as ModDetails).image"
+					class="custom-button-style"
+					@click="state.changes.image = (state.modDetails as ModDetails).image"
+					:disabled="state.updating">
+					Restore original.
+				</button>
+				<br />
 				
-				ref="logoChooser"
-				@change="logoChange"
-			>
+				<i>Max allowed file size is 14MB.</i>
+				<br />
+				
+				<!-- TODO: Drop support! -->
+				<input
+					type="file"
+					accept="image/gif, image/jpeg, image/webp, image/png"
+					class="custom-button-style-inner"
+					style="display: none"
+					
+					ref="logoChooser"
+					@change="logoChange"
+				>
+				
+				<p>
+					<img v-if="isString(state.changes.image)"
+					     :src="imageFromMod(state.modDetails as ModDetails)"
+					     alt="Mod Logo"
+					     class="logo-wrapper"
+					/>
+					<img v-else-if="state.changes.image"
+					     :src="(state.changes.image as ImageData).blob"
+					     alt="Mod Logo"
+					     class="logo-wrapper"
+					/>
+				</p>
+			</div>
+			<p>
+				Source code link:<br />
+				<input type="text" v-model="state.changes.linkSourceCode" :disabled="state.updating"/>
+			</p>
+			<p>
+				Description:<br />
+				<textarea v-model="state.changes.description" :disabled="state.updating"/>
+			</p>
 			
 			<p>
-				<img v-if="isString(state.changes.image)"
-				     :src="imageFromMod(state.modDetails as ModDetails)"
-				     alt="Mod Logo"
-				     class="logo-wrapper"
-				/>
-				<img v-else-if="state.changes.image"
-				     :src="(state.changes.image as ImageData).blob"
-				     alt="Mod Logo"
-				     class="logo-wrapper"
-				/>
+				Status: {{ statusText }} <br />
+				<button
+					class="custom-button-style"
+					:disabled="state.updating || !isDirty || !isValid"
+					@click="update"
+				>Update</button>
 			</p>
 		</div>
-		<p>
-			Source code link:<br />
-			<input type="text" v-model="state.changes.linkSourceCode" :disabled="state.updating"/>
-		</p>
-		<p>
-			Description:<br />
-			<textarea v-model="state.changes.description" :disabled="state.updating"/>
-		</p>
-		
-		<p>
-			Status: {{ statusText }} <br />
-			<button
-				class="custom-button-style"
-				:disabled="state.updating || !isDirty || !isValid"
-				@click="update"
-			>Update</button>
-		</p>
 		
 	</div>
 </template>
@@ -385,6 +388,13 @@ async function update() {
 
 <style scoped>
 	p {
+		margin: 10px 0;
+	}
+	
+	.content-box {
+		border: solid 1px green;
+		padding: 3px 10px;
+		border-radius: 10px;
 		margin: 10px 0;
 	}
 	
