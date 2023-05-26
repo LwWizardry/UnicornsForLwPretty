@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 import { useAuthStore } from "@/stores/auth";
-import { onMounted, reactive } from "vue";
+import { onMounted, ref } from "vue";
 import type { ModDetails } from "@/types/mod";
 import { performAPIRequest } from "@/code/apiRequests";
 import {
@@ -44,7 +44,7 @@ import EditModDetails from "@/components/EditModDetails.vue";
 
 const modIdentifier = useRoute().params.modID;
 const authStore = useAuthStore();
-const state = reactive({
+const state = ref({
 	hasLoaded: false,
 	loadingErrorMessage: null as null|string,
 	//The original unchanged mod data (as present on the server):
@@ -54,16 +54,16 @@ const state = reactive({
 async function loadMod() {
 	const apiResponse = await performAPIRequest('/mod-details?identifier=' + modIdentifier);
 	if(!isTypeSuccessfulResponse(apiResponse)) {
-		state.loadingErrorMessage = apiResponse.getUserString();
+		state.value.loadingErrorMessage = apiResponse.getUserString();
 		return; //Failed!
 	}
 	const response = apiResponse.data;
 	if(!isObjectNullable(response.details) || !isTypeModDetailsOptional(response.details)) {
-		state.loadingErrorMessage = new APIResponseInvalid(response).getUserString();
+		state.value.loadingErrorMessage = new APIResponseInvalid(response).getUserString();
 		return; //Failed!
 	}
-	state.modDetails = parseTypeModDetailsOptional(response.details);
-	state.hasLoaded = true;
+	state.value.modDetails = parseTypeModDetailsOptional(response.details);
+	state.value.hasLoaded = true;
 }
 
 onMounted(() => {

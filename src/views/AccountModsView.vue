@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive } from "vue";
+import { onMounted, ref } from "vue";
 import type { ModSummaryAnonym } from "@/types/mod";
 import { performAPIRequest } from "@/code/apiRequests";
 import { useAuthStore } from "@/stores/auth";
@@ -28,7 +28,7 @@ import { APIResponseInvalid, isTypeSuccessfulResponse } from "@/types/api";
 import { isTypeModSummaryAnonymArray } from "@/types/mod";
 
 const authStore = useAuthStore();
-const state = reactive({
+const state = ref({
 	hasLoaded: false,
 	errorWhileLoading: null as null|string,
 	yourMods: [] as ModSummaryAnonym[]
@@ -44,17 +44,17 @@ async function loadUserMods() {
 	}
 	const apiResponse = await performAPIRequest('/mod/user-list?identifier=' + authStore.currentUser.identifier);
 	if(!isTypeSuccessfulResponse(apiResponse)) {
-		state.errorWhileLoading = apiResponse.getUserString();
+		state.value.errorWhileLoading = apiResponse.getUserString();
 		return; //Failed!
 	}
 	const response = apiResponse.data;
 	if(!isTypeModSummaryAnonymArray(response)) {
-		state.errorWhileLoading = new APIResponseInvalid(response).getUserString();
+		state.value.errorWhileLoading = new APIResponseInvalid(response).getUserString();
 		return; //Failed!
 	}
 	
-	state.yourMods = response;
-	state.hasLoaded = true;
+	state.value.yourMods = response;
+	state.value.hasLoaded = true;
 }
 </script>
 

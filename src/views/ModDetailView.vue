@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive } from "vue";
+import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { performAPIRequest } from "@/code/apiRequests";
 import { APIResponseInvalid, isTypeSuccessfulResponse } from "@/types/api";
@@ -31,7 +31,7 @@ import { useAuthStore } from "@/stores/auth";
 
 const modIdentifier = useRoute().params.modID;
 const authStore = useAuthStore();
-const state = reactive({
+const state = ref({
 	hasLoaded: false,
 	loadingErrorMessage: null as null|string,
 	modToDisplay: null as null|ModDetails,
@@ -41,21 +41,21 @@ const state = reactive({
 async function loadMod() {
 	const apiResponse = await performAPIRequest('/mod-details?identifier=' + modIdentifier);
 	if(!isTypeSuccessfulResponse(apiResponse)) {
-		state.loadingErrorMessage = apiResponse.getUserString();
+		state.value.loadingErrorMessage = apiResponse.getUserString();
 		return; //Failed!
 	}
 	const response = apiResponse.data;
 	if(!isObjectNullable(response.details) || !isTypeModDetailsOptional(response.details)) {
-		state.loadingErrorMessage = new APIResponseInvalid(response).getUserString();
+		state.value.loadingErrorMessage = new APIResponseInvalid(response).getUserString();
 		return; //Failed!
 	}
-	state.modToDisplay = parseTypeModDetailsOptional(response.details);
-	if(state.modToDisplay !== null) {
-		state.descriptionHTML = state.modToDisplay.description.length === 0 ?
+	state.value.modToDisplay = parseTypeModDetailsOptional(response.details);
+	if(state.value.modToDisplay !== null) {
+		state.value.descriptionHTML = state.value.modToDisplay.description.length === 0 ?
 			'-none-' :
-			window.__markdown.mainInstance.render(state.modToDisplay.description);
+			window.__markdown.mainInstance.render(state.value.modToDisplay.description);
 	}
-	state.hasLoaded = true;
+	state.value.hasLoaded = true;
 }
 
 onMounted(() => {

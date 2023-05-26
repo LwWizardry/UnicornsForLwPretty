@@ -80,7 +80,7 @@
 <script setup lang="ts">
 import { imageFromMod, type ModDetails } from "@/types/mod";
 import { isString } from "@/helper/jsonValidator";
-import { computed, reactive, ref } from "vue";
+import { computed, ref } from "vue";
 import { performAPIPostWithSession } from "@/code/apiRequests";
 import { isTypeSuccessfulResponse } from "@/types/api";
 
@@ -92,7 +92,7 @@ interface ImageData {
 const logoChooser = ref<HTMLInputElement | null>(null);
 
 const props = defineProps(['modDetails', 'authStore']);
-const state = reactive({
+const state = ref({
 	hasLoaded: false,
 	loadingErrorMessage: null as null|string,
 	//The data, as currently in the fields:
@@ -111,7 +111,7 @@ const state = reactive({
 setMod(props.modDetails);
 
 function logoChange(event: any) {
-	state.errorText = null;
+	state.value.errorText = null;
 	const files: FileList = event.target.files;
 	if(files.length !== 1) {
 		//TODO: Error somewhere else.
@@ -122,11 +122,11 @@ function logoChange(event: any) {
 	console.log(file);
 	if(file.size > 14000000) {
 		//TODO: This way of setting errors is bad, there should be a popout. It is too persistent until some other data changes.
-		state.errorText = 'Image file is too large, max allowed is 14MB.';
-		state.changes.image = null;
+		state.value.errorText = 'Image file is too large, max allowed is 14MB.';
+		state.value.changes.image = null;
 		return;
 	}
-	state.changes.image = {
+	state.value.changes.image = {
 		blob: URL.createObjectURL(file),
 		data: file,
 	};
@@ -134,11 +134,11 @@ function logoChange(event: any) {
 
 function setMod(mod: null|ModDetails) {
 	if(mod) {
-		state.changes.title = mod.title;
-		state.changes.caption = mod.caption;
-		state.changes.description = mod.description;
-		state.changes.linkSourceCode = mod.linkSourceCode === null ? '' : mod.linkSourceCode;
-		state.changes.image = mod.image;
+		state.value.changes.title = mod.title;
+		state.value.changes.caption = mod.caption;
+		state.value.changes.description = mod.description;
+		state.value.changes.linkSourceCode = mod.linkSourceCode === null ? '' : mod.linkSourceCode;
+		state.value.changes.image = mod.image;
 	}
 }
 
@@ -146,8 +146,8 @@ const isDirtyTitle = computed(() => {
 	if(!props.modDetails) {
 		return false;
 	}
-	return props.modDetails.title.length !== state.changes.title.length
-		|| props.modDetails.title !== state.changes.title
+	return props.modDetails.title.length !== state.value.changes.title.length
+		|| props.modDetails.title !== state.value.changes.title
 });
 
 const isDirtyCaption = computed(() => {
@@ -155,8 +155,8 @@ const isDirtyCaption = computed(() => {
 		return false;
 	}
 	//Let's hope that the length is cached and this will leverage string comparisons:
-	return props.modDetails.caption.length !== state.changes.caption.length
-		|| props.modDetails.caption !== state.changes.caption //Rather expensive...
+	return props.modDetails.caption.length !== state.value.changes.caption.length
+		|| props.modDetails.caption !== state.value.changes.caption //Rather expensive...
 });
 
 const isDirtyDescription = computed(() => {
@@ -164,7 +164,7 @@ const isDirtyDescription = computed(() => {
 		return false;
 	}
 	//Let's hope that the length is cached and this will leverage string comparisons:
-	return props.modDetails.description.length !== state.changes.description.length
+	return props.modDetails.description.length !== state.value.changes.description.length
 		|| props.modDetails.description !== props.modDetails.description //Rather expensive...
 });
 
@@ -174,9 +174,9 @@ const isDirtyLinkSourceCode = computed(() => {
 	}
 	//If was null:
 	if(!props.modDetails.linkSourceCode) {
-		return state.changes.linkSourceCode.length !== 0;
+		return state.value.changes.linkSourceCode.length !== 0;
 	}
-	return props.modDetails.linkSourceCode.length !== state.changes.linkSourceCode.length
+	return props.modDetails.linkSourceCode.length !== state.value.changes.linkSourceCode.length
 		|| props.modDetails.linkSourceCode !== props.modDetails.linkSourceCode
 });
 
@@ -184,7 +184,7 @@ const isDirtyLogo = computed(() => {
 	if(!props.modDetails) {
 		return false;
 	}
-	return props.modDetails.image !== state.changes.image
+	return props.modDetails.image !== state.value.changes.image
 });
 
 const isDirty = computed(() => {
@@ -196,11 +196,11 @@ const isDirty = computed(() => {
 });
 
 const titleLength = computed(() => {
-	return Array.from(state.changes.title).length;
+	return Array.from(state.value.changes.title).length;
 });
 
 const captionLength = computed(() => {
-	return Array.from(state.changes.caption).length;
+	return Array.from(state.value.changes.caption).length;
 });
 
 const isValidTitleLower = computed(() => {
@@ -221,17 +221,17 @@ const isValidCaptionUpper = computed(() => {
 
 const isValidDescription = computed(() => {
 	//Subject to change, can be increased anytime:
-	return Array.from(state.changes.description).length <= 10000
+	return Array.from(state.value.changes.description).length <= 10000
 });
 
 const isValidLinkSourceCodeLength = computed(() => {
 	//Subject to change, can be increased anytime:
-	return Array.from(state.changes.linkSourceCode).length <= 500
+	return Array.from(state.value.changes.linkSourceCode).length <= 500
 });
 
 const isValidLinkSourceCodeFormat = computed(() => {
 	//Subject to change, can be increased anytime:
-	const link = state.changes.linkSourceCode.trim();
+	const link = state.value.changes.linkSourceCode.trim();
 	return Boolean(link.length === 0
 		|| link.match(/^https?:\/\/([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|[^\/.]+\.[^\/.0-9]+)(\/.*)?$/))
 });
@@ -250,11 +250,11 @@ const statusText = computed(() => {
 	if(!props.modDetails) {
 		return 'This text should never be visible.';
 	}
-	if(state.updating) {
+	if(state.value.updating) {
 		return 'Sending changes to server...';
 	}
-	if(state.errorText) {
-		return state.errorText;
+	if(state.value.errorText) {
+		return state.value.errorText;
 	}
 	if(!isDirty.value) {
 		return 'Waiting for changes.'
@@ -296,40 +296,40 @@ const file2Base64 = (file:File):Promise<string> => {
 }
 
 async function update() {
-	state.errorText = null;
-	if(!isDirty || !isValid || state.updating || !props.modDetails || !props.authStore.currentUser) {
+	state.value.errorText = null;
+	if(!isDirty || !isValid || state.value.updating || !props.modDetails || !props.authStore.currentUser) {
 		return; //Nothing to do.
 	}
-	state.updating = true; //Prevent user from touching any data, and indicate that uploading is in progress.
+	state.value.updating = true; //Prevent user from touching any data, and indicate that uploading is in progress.
 	
 	const updateData = {
 		identifier: props.modDetails.identifier,
-		newTitle: isDirtyTitle.value ? state.changes.title : null,
-		newCaption: isDirtyCaption.value ? state.changes.caption : null,
-		newDescription: isDirtyDescription.value ? state.changes.description : null,
-		newLinkSourceCode: isDirtyLinkSourceCode.value ? state.changes.linkSourceCode : null,
+		newTitle: isDirtyTitle.value ? state.value.changes.title : null,
+		newCaption: isDirtyCaption.value ? state.value.changes.caption : null,
+		newDescription: isDirtyDescription.value ? state.value.changes.description : null,
+		newLinkSourceCode: isDirtyLinkSourceCode.value ? state.value.changes.linkSourceCode : null,
 		newLogo: !isDirtyLogo.value ? null : {
-			data: state.changes.image === null ? null : await file2Base64((state.changes.image as ImageData).data),
+			data: state.value.changes.image === null ? null : await file2Base64((state.value.changes.image as ImageData).data),
 		},
 	};
 	
 	const apiResponse = await performAPIPostWithSession('/mod/edit', props.authStore.currentUser.token, {data: updateData});
 	if(!isTypeSuccessfulResponse(apiResponse)) {
 		//TODO: More specific error handling, specific handling of the failure type (invalid session).
-		state.errorText = apiResponse.getUserString();
-		state.updating = false;
+		state.value.errorText = apiResponse.getUserString();
+		state.value.updating = false;
 		return;
 	}
 	
 	//There is no data returned, just accept what was sent:
-	props.modDetails.title = state.changes.title;
-	props.modDetails.caption = state.changes.caption;
-	props.modDetails.description = state.changes.description;
-	const trimmedSourceCode = state.changes.linkSourceCode.trim();
+	props.modDetails.title = state.value.changes.title;
+	props.modDetails.caption = state.value.changes.caption;
+	props.modDetails.description = state.value.changes.description;
+	const trimmedSourceCode = state.value.changes.linkSourceCode.trim();
 	props.modDetails.linkSourceCode = trimmedSourceCode.length === 0 ? null : trimmedSourceCode;
 	props.modDetails.image = apiResponse.data.image ? apiResponse.data.image : null;
-	state.changes.image = props.modDetails.image;
-	state.updating = false;
+	state.value.changes.image = props.modDetails.image;
+	state.value.updating = false;
 }
 </script>
 

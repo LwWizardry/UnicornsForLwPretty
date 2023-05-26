@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, reactive} from "vue";
+import {onMounted, ref} from "vue";
 import { useAuthStore } from "@/stores/auth";
 import type { ModSummary } from "@/types/mod";
 import { performAPIRequest } from "@/code/apiRequests";
@@ -30,7 +30,7 @@ import { APIResponseInvalid, isTypeSuccessfulResponse } from "@/types/api";
 
 const authStore = useAuthStore();
 
-const state = reactive({
+const state = ref({
 	loadingErrorMessage: null as null|string,
 	mods: null as ModSummary[]|null,
 });
@@ -43,15 +43,15 @@ onMounted(() => {
 async function loadMods() {
 	const apiResponse = await performAPIRequest('/mods');
 	if(!isTypeSuccessfulResponse(apiResponse)) {
-		state.loadingErrorMessage = apiResponse.getUserString();
+		state.value.loadingErrorMessage = apiResponse.getUserString();
 		return; //Failed!
 	}
 	const response = apiResponse.data;
 	if(!isTypeModSummaryArray(response)) {
-		state.loadingErrorMessage = new APIResponseInvalid(response).getUserString();
+		state.value.loadingErrorMessage = new APIResponseInvalid(response).getUserString();
 		return; //Failed!
 	}
-	state.mods = parseTypeModSummaryArray(response);
+	state.value.mods = parseTypeModSummaryArray(response);
 }
 </script>
 

@@ -32,14 +32,14 @@
 
 <script setup lang="ts">
 
-import { computed, reactive, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { performAPIPostWithSession } from "@/code/apiRequests";
 import { isTypeSuccessfulResponse } from "@/types/api";
 
 const authStore = useAuthStore();
 
-const state = reactive({
+const state = ref({
 	submitting: false,
 	issues: 'None',
 	content: {
@@ -49,37 +49,37 @@ const state = reactive({
 });
 
 const titleLength = computed(() => {
-	return Array.from(state.content.title).length;
+	return Array.from(state.value.content.title).length;
 });
 
 const captionLength = computed(() => {
-	return Array.from(state.content.caption).length;
+	return Array.from(state.value.content.caption).length;
 });
 
 const isValid = computed(() => {
 	return authStore.isLoggedIn
-		&& !state.submitting
+		&& !state.value.submitting
 		&& captionLength.value >= 10 && captionLength.value <= 200
 		&& titleLength.value >= 3 && titleLength.value <= 50
 });
 
-watch(state.content, () => {
+watch(state.value.content, () => {
 	updateIssue();
 });
 
 function updateIssue() {
 	if(!authStore.isLoggedIn) {
-		state.issues = 'Not logged in, log in to submit a mod.';
+		state.value.issues = 'Not logged in, log in to submit a mod.';
 	} else if(titleLength.value < 3) {
-		state.issues = 'Title is too short, should have at least 3 letters.';
+		state.value.issues = 'Title is too short, should have at least 3 letters.';
 	} else if(titleLength.value > 50) {
-		state.issues = 'Title is too long, should have at most 50 letters.';
+		state.value.issues = 'Title is too long, should have at most 50 letters.';
 	} else if(captionLength.value < 10) {
-		state.issues = 'Caption is too short, should have at least 10 letters.';
+		state.value.issues = 'Caption is too short, should have at least 10 letters.';
 	} else if(captionLength.value >= 200) {
-		state.issues = 'Caption is too long, should have at most 200 letters.';
+		state.value.issues = 'Caption is too long, should have at most 200 letters.';
 	} else {
-		state.issues = 'None';
+		state.value.issues = 'None';
 	}
 }
 updateIssue();
@@ -89,29 +89,29 @@ async function submitMod() {
 	if(!isValid.value || !session) {
 		return;
 	}
-	state.submitting = true;
+	state.value.submitting = true;
 	//Trim data before sending:
-	state.content.title = state.content.title.trim();
-	state.content.caption = state.content.caption.trim();
+	state.value.content.title = state.content.value.title.trim();
+	state.value.content.caption = state.content.value.caption.trim();
 	
 	const apiResponse = await performAPIPostWithSession(
 		'/mod/post',
 		session,
 		{
-			data: state.content,
+			data: state.value.content,
 		}
 	);
 	if(!isTypeSuccessfulResponse(apiResponse)) {
-		state.submitting = false;
+		state.value.submitting = false;
 		//TBI: Actions to handle, in case of failure? (Session timeout, for example).
-		state.issues = apiResponse.getUserString();
+		state.value.issues = apiResponse.getUserString();
 		return;
 	}
 	
 	//TODO: Parse identifier and open the mod's edit view. Or something similar.
 	console.log('Probably success, data:', apiResponse.data)
 	
-	state.issues = 'Mod submitted, reload the page if you want to submit another one - PLEASE DO NOT SPAM MODS! (I will have to delete them all anyway though - later).';
+	state.value.issues = 'Mod submitted, reload the page if you want to submit another one - PLEASE DO NOT SPAM MODS! (I will have to delete them all anyway though - later).';
 	//state.submitting = false;
 }
 </script>
