@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-	import content from '/src/assets/legal/terms.md?raw';
+	import content from '@/assets/legal/terms.md?raw';
 	import { restoreContact } from "@/helper/contactRestoration";
 	
 	const termsHTML = window.__markdown.render(restoreContact(content));
