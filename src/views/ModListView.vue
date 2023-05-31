@@ -7,10 +7,10 @@
 	<div>
 		<p v-if="state.loadingErrorMessage">Failed to load mod list: {{ state.loadingErrorMessage }}</p>
 		<p v-else-if="!state.mods">Mod list is loading...</p>
-		<ul v-else>
+		<ul v-else class="unstyled-list">
 			<li v-for="mod in state.mods" :key="mod.title" class="mod-summary">
 				<RouterLink :to="'/mod/mod-' + mod.identifier" class="mod">
-						<img v-if="mod.image" :src="imageFromMod(mod)" class="logo"/>
+						<img v-if="mod.image" :src="imageFromMod(mod)" class="logo" alt="Mod Logo"/>
 						<h3>{{ mod.title }}</h3>
 						<p>{{ mod.caption }}</p>
 						<p>By {{ mod.owner.getDisplayName() }}</p>
@@ -56,12 +56,16 @@ async function loadMods() {
 </script>
 
 <style scoped>
+	.unstyled-list {
+		list-style: none;
+		padding: 0;
+	}
 	.mod {
 		background-color: #222;
 		border-radius: 10px;
 		padding: 10px;
 		display: block;
-		margin: 5px;
+		margin: 5px 0;
 	}
 	.logo {
 		max-width: 1000px;
