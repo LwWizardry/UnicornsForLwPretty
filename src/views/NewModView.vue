@@ -91,8 +91,8 @@ async function submitMod() {
 	}
 	state.value.submitting = true;
 	//Trim data before sending:
-	state.value.content.title = state.content.value.title.trim();
-	state.value.content.caption = state.content.value.caption.trim();
+	state.value.content.title = state.value.content.title.trim();
+	state.value.content.caption = state.value.content.caption.trim();
 	
 	const apiResponse = await performAPIPostWithSession(
 		'/mod/post',
