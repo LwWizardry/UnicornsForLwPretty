@@ -1,22 +1,26 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
 import { useAuthStore } from "@/stores/auth";
+import WebsiteTitle from "@/components/WebsiteTitle.vue";
 
 const authStore = useAuthStore();
+
+const discordLink = import.meta.env.VITE_DISCORD_LINK;
+const lwLink = import.meta.env.VITE_LOGICWORLD_LINK;
 </script>
 
 <template>
 	<header>
 		<div class="wrapper">
-			<HelloWorld msg="Logic World Community Mod Portal" />
+			<WebsiteTitle />
 			
 			<nav>
-				<RouterLink to="/">Home</RouterLink>
+				<RouterLink to="/">Welcome</RouterLink>
 				<RouterLink to="/mods">Mods</RouterLink>
-				<RouterLink to="/about">About</RouterLink>
 				<RouterLink v-if="!authStore.isLoggedIn" to="/login">Login</RouterLink>
 				<RouterLink v-if="authStore.currentUser" to="/account">Account ({{ authStore.currentUser.username }})</RouterLink>
+				<a :href="discordLink" target="_blank">Discord🔗</a>
+				<a :href="lwLink" target="_blank">Logic World🔗</a>
 				<RouterLink to="/terms">Terms of Service</RouterLink>
 				<RouterLink to="/privacy">Privacy Policy</RouterLink>
 				<RouterLink to="/imprint">Imprint</RouterLink>
