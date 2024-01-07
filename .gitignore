@@ -26,6 +26,3 @@ coverage
 *.njsproj
 *.sln
 *.sw?
-
-# Project environment files:
-/.env.production
